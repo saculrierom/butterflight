@@ -334,6 +334,13 @@ static const char * const lookupTableRescueSanityType[] = {
     "RESCUE_SANITY_OFF", "RESCUE_SANITY_ON", "RESCUE_SANITY_FS_ONLY"
 };
 #endif
+#ifdef USE_GYRO_BIQUAD_RC_FIR2
+#ifdef USE_GYRO_FAST_KALMAN
+static const char * const lookupTableStage2FilterType[] = {
+    "NONE", "BIQUAD_RC_FIR2", "FAST_KALMAN"
+};
+#endif
+#endif // Only use lookup when both are enabled
 
 #ifdef USE_MAX7456
 static const char * const lookupTableVideoSystem[] = {
@@ -447,6 +454,15 @@ const clivalue_t valueTable[] = {
     { "gyro_lma_depth",             VAR_UINT8  | MASTER_VALUE, .config.minmax = {0, 11}, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lma_depth)},
     { "gyro_lma_weight",            VAR_UINT8  | MASTER_VALUE, .config.minmax = {0, 100}, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lma_weight)},
 
+#if defined(USE_GYRO_BIQUAD_RC_FIR2)
+    { "gyro_stage2_lowpass_hz",     VAR_UINT16 | MASTER_VALUE, .config.minmax = { 0, 16000 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_soft_lpf_hz_2) },
+#if defined(USE_GYRO_FAST_KALMAN)
+    { "gyro_filter_q",              VAR_UINT16 | MASTER_VALUE, .config.minmax = { 0, 16000 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_filter_q) },
+    { "gyro_filter_r",              VAR_UINT16 | MASTER_VALUE, .config.minmax = { 0, 16000 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_filter_r) },
+    { "gyro_filter_p",              VAR_UINT16 | MASTER_VALUE, .config.minmax = { 0, 16000 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_filter_p) },
+    { "gyro_stage2_filter_type",    VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_STAGE2_FILTER_TYPE }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_stage2_filter_type) },
+#endif
+#endif
     { "moron_threshold",            VAR_UINT8  | MASTER_VALUE, .config.minmax = { 0,  200 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyroMovementCalibrationThreshold) },
     { "gyro_offset_yaw",            VAR_INT16  | MASTER_VALUE, .config.minmax = { -1000, 1000 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_offset_yaw) },
 #ifdef USE_GYRO_OVERFLOW_CHECK

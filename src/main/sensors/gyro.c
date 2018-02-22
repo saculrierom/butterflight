@@ -150,6 +150,16 @@ typedef struct gyroSensor_s {
     bool yawSpinDetected;
 #endif // USE_YAW_SPIN_RECOVERY
 
+#if defined(USE_GYRO_FAST_KALMAN)
+    // gyro kalman filter
+    filterApplyFnPtr fastKalmanApplyFn;
+    fastKalman_t fastKalman[XYZ_AXIS_COUNT];
+#endif
+#if defined(USE_GYRO_BIQUAD_RC_FIR2)
+    // gyro biquad RC FIR2 filter
+    filterApplyFnPtr biquadRCFIR2ApplyFn;
+    biquadFilter_t biquadRCFIR2[XYZ_AXIS_COUNT];
+#endif
 } gyroSensor_t;
 
 STATIC_UNIT_TESTED FAST_RAM gyroSensor_t gyroSensor1;
@@ -162,6 +172,12 @@ STATIC_UNIT_TESTED gyroSensor_t * const gyroSensorPtr = &gyroSensor1;
 STATIC_UNIT_TESTED gyroDev_t * const gyroDevPtr = &gyroSensor1.gyroDev;
 #endif
 
+#if defined(USE_GYRO_FAST_KALMAN)
+static void gyroInitFilterKalman(gyroSensor_t *gyroSensor, uint16_t gyro_filter_q, uint16_t gyro_filter_r, uint16_t gyro_filter_p);
+#endif
+#if defined(USE_GYRO_BIQUAD_RC_FIR2)
+static void gyroInitFilterBiquadRCFIR2(gyroSensor_t *gyroSensor, uint16_t lpfHz);
+#endif
 static void gyroInitSensorFilters(gyroSensor_t *gyroSensor);
 static void gyroInitLowpassFilterLpf(gyroSensor_t *gyroSensor, int slot, int type, uint16_t lpfHz, int order);
 
@@ -205,6 +221,11 @@ PG_RESET_TEMPLATE(gyroConfig_t, gyroConfig,
     .gyro_soft_notch_hz_2 = 200,
     .gyro_soft_notch_cutoff_2 = 100,
     .checkOverflow = GYRO_OVERFLOW_CHECK_ALL_AXES,
+    .gyro_soft_lpf_hz_2 = 0,
+    .gyro_filter_q = 0,
+    .gyro_filter_r = 0,
+    .gyro_filter_p = 0,
+    .gyro_stage2_filter_type = STAGE2_FILTER_NONE,
     .gyro_offset_yaw = 0,
     .gyro_lma_depth = 0,
     .gyro_lma_weight = 100,
@@ -805,6 +826,34 @@ static void gyroInitFilterDynamicNotch(gyroSensor_t *gyroSensor)
 }
 #endif
 
+#if defined(USE_GYRO_FAST_KALMAN)
+static void gyroInitFilterKalman(gyroSensor_t *gyroSensor, uint16_t gyro_filter_q, uint16_t gyro_filter_r, uint16_t gyro_filter_p)
+{
+    gyroSensor->fastKalmanApplyFn = nullFilterApply;
+
+    // If Kalman Filter noise covariances for Process and Measurement are non-zero, we treat as enabled
+    if (gyro_filter_q != 0 && gyro_filter_r != 0) {
+        gyroSensor->fastKalmanApplyFn = (filterApplyFnPtr)fastKalmanUpdate;
+        for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+            fastKalmanInit(&gyroSensor->fastKalman[axis], gyro_filter_q, gyro_filter_r, gyro_filter_p);
+        }
+    }
+}
+#endif
+#if defined(USE_GYRO_BIQUAD_RC_FIR2)
+static void gyroInitFilterBiquadRCFIR2(gyroSensor_t *gyroSensor, uint16_t lpfHz)
+{
+    gyroSensor->biquadRCFIR2ApplyFn = nullFilterApply;
+    const uint32_t gyroFrequencyNyquist = 1000000 / 2 / gyro.targetLooptime;
+    const float gyroDt = (float) gyro.targetLooptime * 0.000001f;
+    if (lpfHz && lpfHz <= gyroFrequencyNyquist) {  // Initialisation needs to happen once samplingrate is known
+        gyroSensor->biquadRCFIR2ApplyFn = (filterApplyFnPtr)biquadFilterApply;
+        for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+            biquadRCFIR2FilterInit(&gyroSensor->biquadRCFIR2[axis], lpfHz, gyroDt);
+        }
+    }
+}
+#endif
 
 static void gyroInitSensorFilters(gyroSensor_t *gyroSensor)
 {
@@ -830,6 +879,13 @@ static void gyroInitSensorFilters(gyroSensor_t *gyroSensor)
 
     gyroInitLmaSmoothing(gyroSensor, gyroConfig()->gyro_lma_depth, gyroConfig()->gyro_lma_weight);
 
+#if defined(USE_GYRO_FAST_KALMAN)
+    gyroInitFilterKalman(gyroSensor, gyroConfig()->gyro_filter_q, gyroConfig()->gyro_filter_r, gyroConfig()->gyro_filter_p);
+#endif
+#if defined(USE_GYRO_BIQUAD_RC_FIR2)
+    gyroInitFilterBiquadRCFIR2(gyroSensor, gyroConfig()->gyro_soft_lpf_hz_2);
+#endif
+    gyroInitFilterLpf(gyroSensor, gyroConfig()->gyro_soft_lpf_hz);
     gyroInitFilterNotch1(gyroSensor, gyroConfig()->gyro_soft_notch_hz_1, gyroConfig()->gyro_soft_notch_cutoff_1);
     gyroInitFilterNotch2(gyroSensor, gyroConfig()->gyro_soft_notch_hz_2, gyroConfig()->gyro_soft_notch_cutoff_2);
 #ifdef USE_GYRO_DATA_ANALYSE
@@ -1119,6 +1175,22 @@ static FAST_CODE NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSensor, timeUs
             gyroADCf = gyroSensor->lowpass2FilterApplyFn((filter_t *)&gyroSensor->lowpass2Filter[axis], gyroADCf);
             gyroADCf = gyroSensor->lmaSmoothingApplyFn((filter_t *)&gyroSensor->lmaSmoothingFilter[axis], gyroADCf);
 
+#if defined(USE_GYRO_BIQUAD_RC_FIR2)
+#if defined(USE_GYRO_FAST_KALMAN)
+            switch(gyroConfig()->gyro_stage2_filter_type){
+            case STAGE2_FILTER_FAST_KALMAN:
+                gyroADCf = gyroSensor->fastKalmanApplyFn((filter_t *)&gyroSensor->fastKalman[axis], gyroADCf);
+                break;
+#else
+            switch(STAGE2_FILTER_BIQUAD_RC_FIR2) {
+#endif
+            case STAGE2_FILTER_BIQUAD_RC_FIR2:
+                gyroADCf = gyroSensor->biquadRCFIR2ApplyFn((filter_t *)&gyroSensor->biquadRCFIR2[axis], gyroADCf);
+                break;
+            default:
+                break;
+            }
+#endif
 #ifdef USE_GYRO_DATA_ANALYSE
             gyroADCf = gyroSensor->notchFilterDynApplyFn((filter_t *)&gyroSensor->notchFilterDyn[axis], gyroADCf);
 #endif
@@ -1144,6 +1216,24 @@ static FAST_CODE NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSensor, timeUs
             // apply lowpass2 filter
             gyroADCf = gyroSensor->lowpass2FilterApplyFn((filter_t *)&gyroSensor->lowpass2Filter[axis], gyroADCf);
             gyroADCf = gyroSensor->lmaSmoothingApplyFn((filter_t *)&gyroSensor->lmaSmoothingFilter[axis], gyroADCf);
+#if defined(USE_GYRO_BIQUAD_RC_FIR2)
+#if defined(USE_GYRO_FAST_KALMAN)
+            switch(gyroConfig()->gyro_stage2_filter_type){
+            case STAGE2_FILTER_FAST_KALMAN:
+                // apply fast kalman
+                gyroADCf = gyroSensor->fastKalmanApplyFn((filter_t *)&gyroSensor->fastKalman[axis], gyroADCf);
+                break;
+#else
+            switch(STAGE2_FILTER_BIQUAD_RC_FIR2) {
+#endif
+            case STAGE2_FILTER_BIQUAD_RC_FIR2:
+                // apply biquad RC+FIR2
+                gyroADCf = gyroSensor->biquadRCFIR2ApplyFn((filter_t *)&gyroSensor->biquadRCFIR2[axis], gyroADCf);
+                break;
+            default:
+                break;
+            }
+#endif
 
 #ifdef USE_GYRO_DATA_ANALYSE
             // apply dynamic notch filter
@@ -1305,3 +1395,4 @@ uint8_t gyroReadRegister(uint8_t whichSensor, uint8_t reg)
     return mpuGyroReadRegister(gyroSensorBusByDevice(whichSensor), reg);
 }
 #endif // USE_GYRO_REGISTER_DUMP
+s
