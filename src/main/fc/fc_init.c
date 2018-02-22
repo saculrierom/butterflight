@@ -77,6 +77,7 @@
 #ifdef USE_USB_MSC
 #include "drivers/usb_msc.h"
 #endif
+#include "drivers/dma_spi.h"
 
 #include "fc/config.h"
 #include "fc/fc_init.h"
@@ -198,6 +199,108 @@ static IO_t busSwitchResetPin        = IO_NONE;
 }
 #endif
 
+#ifdef USE_SPI
+// Pre-initialize all CS pins to input with pull-up.
+// It's sad that we can't do this with an initialized array,
+// since we will be taking care of configurable CS pins shortly.
+
+void spiPreInit(void)
+{
+#ifdef GYRO_1_CS_PIN
+    spiPreInitCs(IO_TAG(GYRO_1_CS_PIN));
+#endif
+#ifdef GYRO_2_CS_PIN
+    spiPreInitCs(IO_TAG(GYRO_2_CS_PIN));
+#endif
+#ifdef MPU6000_CS_PIN
+    spiPreInitCs(IO_TAG(MPU6000_CS_PIN));
+#endif
+#ifdef MPU6500_CS_PIN
+    spiPreInitCs(IO_TAG(MPU6500_CS_PIN));
+#endif
+#ifdef MPU9250_CS_PIN
+    spiPreInitCs(IO_TAG(MPU9250_CS_PIN));
+#endif
+#ifdef ICM20649_CS_PIN
+    spiPreInitCs(IO_TAG(ICM20649_CS_PIN));
+#endif
+#ifdef ICM20689_CS_PIN
+    spiPreInitCs(IO_TAG(ICM20689_CS_PIN));
+#endif
+#ifdef BMI160_CS_PIN
+    spiPreInitCs(IO_TAG(BMI160_CS_PIN));
+#endif
+#ifdef L3GD20_CS_PIN
+    spiPreInitCs(IO_TAG(L3GD20_CS_PIN));
+#endif
+#ifdef MAX7456_SPI_CS_PIN
+    spiPreInitCsOutPU(IO_TAG(MAX7456_SPI_CS_PIN)); // XXX 3.2 workaround for Kakute F4. See comment for spiPreInitCSOutPU.
+#endif
+#ifdef USE_SDCARD
+    spiPreInitCs(sdcardConfig()->chipSelectTag);
+#endif
+#ifdef BMP280_CS_PIN
+    spiPreInitCs(IO_TAG(BMP280_CS_PIN));
+#endif
+#ifdef MS5611_CS_PIN
+    spiPreInitCs(IO_TAG(MS5611_CS_PIN));
+#endif
+#ifdef LPS_CS_PIN
+    spiPreInitCs(IO_TAG(LPS_CS_PIN));
+#endif
+#ifdef HMC5883_CS_PIN
+    spiPreInitCs(IO_TAG(HMC5883_CS_PIN));
+#endif
+#ifdef AK8963_CS_PIN
+    spiPreInitCs(IO_TAG(AK8963_CS_PIN));
+#endif
+#if defined(RTC6705_CS_PIN) && !defined(USE_VTX_RTC6705_SOFTSPI) // RTC6705 soft SPI initialisation handled elsewhere.
+    spiPreInitCs(IO_TAG(RTC6705_CS_PIN));
+#endif
+#ifdef FLASH_CS_PIN
+    spiPreInitCs(IO_TAG(FLASH_CS_PIN));
+#endif
+#if defined(USE_RX_SPI) && !defined(USE_RX_SOFTSPI)
+    spiPreInitCs(IO_TAG(RX_NSS_PIN));
+#endif
+}
+#endif
+
+void rebootUpdater(void)
+{
+    #ifdef UPT_ADDRESS
+    typedef void (*pFunction)(void);
+   	pFunction JumpToApplication;
+	uint32_t jumpAddress;
+
+    __disable_irq(); // disable interrupts for jump
+
+    jumpAddress = *(__IO uint32_t*)(UPT_ADDRESS + 4);
+    JumpToApplication = (pFunction)jumpAddress;
+
+    // Initialize user application's Stack Pointer
+    __set_MSP(*(__IO uint32_t*)UPT_ADDRESS);
+    JumpToApplication();
+    #endif
+}
+
+void rebootMsd(void)
+{
+    #ifdef MSD_ADDRESS
+    typedef void (*pFunction)(void);
+   	pFunction JumpToApplication;
+	uint32_t jumpAddress;
+
+    __disable_irq(); // disable interrupts for jump
+
+    jumpAddress = *(__IO uint32_t*)(MSD_ADDRESS + 4);
+    JumpToApplication = (pFunction)jumpAddress;
+
+    // Initialize user application's Stack Pointer
+    __set_MSP(*(__IO uint32_t*)MSD_ADDRESS);
+    JumpToApplication();
+    #endif
+}
 void init(void)
 {
 #ifdef USE_ITCM_RAM
@@ -387,6 +490,9 @@ void init(void)
 
 #ifdef USE_SPI_DEVICE_1
     spiInit(SPIDEV_1);
+#endif
+#ifdef USE_DMA_SPI_DEVICE
+    dmaSpiInit();
 #endif
 #ifdef USE_SPI_DEVICE_2
     spiInit(SPIDEV_2);
