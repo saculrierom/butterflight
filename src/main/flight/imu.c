@@ -430,7 +430,8 @@ float imuCalcKpGain(timeUs_t currentTimeUs, bool useAcc, float *gyroAverage)
 
 static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
 {
-    static timeUs_t previousIMUUpdateTime;
+    static timeUs_t previousIMUUpdateTime = 0;
+    float rawYawError = 0;
     bool useAcc = false;
     bool useMag = false;
     bool useCOG = false; // Whether or not correct yaw via imuMahonyAHRSupdate from our ground course
