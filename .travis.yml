@@ -38,6 +38,7 @@ addons:
     paths:
       - $(ls obj/*.hex | tr "\n" ":")
       - $(ls obj/*.bin | tr "\n" ":")
+      - $(git ls-files -o -x node_modules/ | tr "\n" ":")
     target_paths:
       - /$TRAVIS_BUILD_NUMBER/Butterflight/
 
