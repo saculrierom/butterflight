@@ -360,11 +360,14 @@ bool mixerIsTricopter(void)
 
 bool mixerIsOutputSaturated(int axis, float errorRate)
 {
+    #ifndef USE_QUAD_MIXER_ONLY
     if (axis == FD_YAW && mixerIsTricopter()) {
         return mixerTricopterIsServoSaturated(errorRate);
     }
-
-    return motorMixRange >= 1.0f;
+    #else
+        return motorMixRange >= 1.0f;
+    #endif
+    return false;
 }
 
 // All PWM motor scaling is done to standard PWM range of 1000-2000 for easier tick conversion with legacy code / configurator
@@ -420,9 +423,11 @@ void mixerInit(mixerMode_e mixerMode)
     currentMixerMode = mixerMode;
 
     initEscEndpoints();
+    #ifndef USE_QUAD_MIXER_ONLY
     if (mixerIsTricopter()) {
         mixerTricopterInit();
     }
+    #endif
 }
 
 #ifndef USE_QUAD_MIXER_ONLY
@@ -693,9 +698,11 @@ static void applyMixToMotors(float motorMix[MAX_SUPPORTED_MOTORS])
     // roll/pitch/yaw. This could move throttle down, but also up for those low throttle flips.
     for (int i = 0; i < motorCount; i++) {
         float motorOutput = motorOutputMin + (motorOutputRange * (motorOutputMixSign * motorMix[i] + throttle * currentMixer[i].throttle));
+        #ifndef USE_QUAD_MIXER_ONLY
         if (mixerIsTricopter()) {
             motorOutput += mixerTricopterMotorCorrection(i);
         }
+        #endif
         if (failsafeIsActive()) {
             if (isMotorProtocolDshot()) {
                 motorOutput = (motorOutput < motorRangeMin) ? disarmMotorOutput : motorOutput; // Prevent getting into special reserved range

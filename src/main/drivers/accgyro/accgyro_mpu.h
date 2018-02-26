@@ -218,6 +218,13 @@ typedef struct imufData
     float accX;
     float accY;
     float accZ;
+    float tempC;
+    float quaternionW;
+    float quaternionX;
+    float quaternionY;
+    float quaternionZ;
+    uint32_t crc;
+    uint32_t tail;
 } __attribute__((__packed__)) imufData_t;
 #endif
 extern volatile int dmaSpiGyroDataReady;
@@ -233,6 +240,7 @@ uint8_t mpuGyroReadRegister(const busDevice_t *bus, uint8_t reg);
 struct accDev_s;
 bool mpuAccRead(struct accDev_s *acc);
 #ifdef USE_DMA_SPI_DEVICE
+extern volatile uint32_t imufCrcErrorCount;
 extern bool mpuGyroDmaSpiReadStart(struct gyroDev_s *gyro);
 extern void mpuGyroDmaSpiReadFinish(struct gyroDev_s *gyro);
 #endif
