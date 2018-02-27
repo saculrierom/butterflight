@@ -426,3 +426,22 @@ FAST_CODE float lmaSmoothingUpdate(laggedMovingAverage_t *filter, float input)
 
     return input + (((filter->movingSum  / filter->windowSize) - input) * filter->weight);
 }
+
+// rs2k's fast "kalman" filter per Fujin
+void fixedKKalmanInit(fastKalman_t *filter, uint16_t f_cut, float dT)
+{
+    float RC = 1.0f / ( 2.0f * M_PI_FLOAT * f_cut );
+    float a = dT / (RC + dT);
+
+    filter->x     = 0.0f;          // set initial value, can be zero if unknown
+    filter->lastX = 0.0f;          // set initial value, can be zero if unknown
+    filter->k     = a / 2;         // "kalman" gain - half of RC coefficient
+}
+
+FAST_CODE float fixedKKalmanUpdate(fastKalman_t *filter, float input)
+{
+    filter->x += (filter->x - filter->lastX);
+    filter->lastX = filter->x;
+    filter->x += filter->k * (input - filter->x);
+    return filter->x;
+}

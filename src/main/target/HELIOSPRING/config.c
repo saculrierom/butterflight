@@ -31,28 +31,61 @@
 
 void targetConfiguration(void) {
     voltageSensorADCConfigMutable(VOLTAGE_SENSOR_ADC_VBAT)->vbatscale = VBAT_SCALE;
-    rxConfigMutable()->rcInterpolation = 0;
-    motorConfigMutable()->dev.motorPwmProtocol = PWM_TYPE_DSHOT600;
+    rxConfigMutable()->rcInterpolation = 3;
+    rxConfigMutable()->rcInterpolationInterval = 14;
+    rxConfigMutable()->rcInterpolationChannels = 2;
+    motorConfigMutable()->dev.motorPwmProtocol = PWM_TYPE_MULTISHOT;
     pidConfigMutable()->pid_process_denom = 1; // 16kHz PID
     gyroConfigMutable()->gyro_use_32khz = 1;
     gyroConfigMutable()->gyro_sync_denom = 2;  // 16kHz gyro
     gyroConfigMutable()->gyro_soft_lpf_hz = 0;
     gyroConfigMutable()->gyro_soft_notch_hz_1 = 0;
     gyroConfigMutable()->gyro_soft_notch_hz_2 = 0;
+    gyroConfigMutable()->gyroMovementCalibrationThreshold = 5;
 
     for (uint8_t pidProfileIndex = 0; pidProfileIndex < MAX_PROFILE_COUNT; pidProfileIndex++) {
         pidProfile_t *pidProfile = pidProfilesMutable(pidProfileIndex);
 
+    #if  defined(HELIO_RACE)
+        //optimizng for strech-x
+        pidProfile->pid[PID_PITCH].P = 30;	
+        pidProfile->pid[PID_PITCH].I = 60;	
+        pidProfile->pid[PID_PITCH].D = 17;	
+        pidProfile->pid[PID_ROLL].P = 28;	
+        pidProfile->pid[PID_ROLL].I = 70;	
+        pidProfile->pid[PID_ROLL].D = 20;
+    #elif defined(HELIO_FREESTYLE)
+        //optimizng for squished-x
+        pidProfile->pid[PID_PITCH].P = 40;	
+        pidProfile->pid[PID_PITCH].I = 55;	
+        pidProfile->pid[PID_PITCH].D = 27;	
+        pidProfile->pid[PID_ROLL].P = 43;	
+        pidProfile->pid[PID_ROLL].I = 45;	
+        pidProfile->pid[PID_ROLL].D = 25;
+    #elif defined(HELIO_BANGOOD_SPECIAL)
+        //optimizng for IDKWTF set the normal defaults
+    #else
+        //optimizng for true-x and most standard tunes.
+        pidProfile->pid[PID_PITCH].P = 45;	
+        pidProfile->pid[PID_PITCH].I = 50;	
+        pidProfile->pid[PID_PITCH].D = 30;	
+        pidProfile->pid[PID_ROLL].P = 45;	
+        pidProfile->pid[PID_ROLL].I = 50;	
+        pidProfile->pid[PID_ROLL].D = 30;
+    #endif
+
         /* Setpoints */
         pidProfile->dtermSetpointWeight = 100;
         pidProfile->setpointRelaxRatio = 100; // default to snappy for racers
-        pidProfile->itermAcceleratorGain = 3500;
+        pidProfile->itermAcceleratorGain = 5000;
         // should't need to set these since they don't get init in gyro.c with USE_GYRO_IMUF
         // pidProfile->yaw_lpf_hz = 0;
         // pidProfile->dterm_lpf_hz = 0;    
         // pidProfile->dterm_notch_hz = 0;
         // pidProfile->dterm_notch_cutoff = 0;
-        pidProfile->dterm_filter_type = FILTER_PT1;
+        pidProfile->dterm_filter_type = FILTER_BIQUAD;
+        pidProfile->dterm_filter_style = KD_FILTER_NOSP;
+        pidProfile->dterm_lpf_hz = 60;
     }
 }
 

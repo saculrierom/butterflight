@@ -365,6 +365,8 @@ bool mixerIsOutputSaturated(int axis, float errorRate)
         return mixerTricopterIsServoSaturated(errorRate);
     }
     #else
+        (void)axis;
+        (void)errorRate;
         return motorMixRange >= 1.0f;
     #endif
     return false;

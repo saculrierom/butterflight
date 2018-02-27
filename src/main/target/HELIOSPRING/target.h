@@ -25,6 +25,7 @@
 #define LED0_PIN                PB7
 
 #define BEEPER                  PC15
+#define BEEPER_INVERTED
 
 #define USE_GYRO
 #define USE_ACC
@@ -42,6 +43,7 @@
 
 
 #define USE_DSHOT_DMAR
+#define FORCE_DSHOT_DMAR
 
 #define M25P16_CS_PIN           PC14
 #define M25P16_SPI_INSTANCE     SPI3
@@ -75,8 +77,8 @@
 #define UART4_RX_PIN            PC11
 
 #define USE_UART5
-#define UART5_RX_PIN            PC12
-#define UART5_TX_PIN            PD2
+#define UART5_RX_PIN            PD2
+#define UART5_TX_PIN            PC12
 
 #define SERIAL_PORT_COUNT       6 //VCP, USART1, USART2, USART3, UART4, USART5
 
@@ -148,6 +150,7 @@
 #define SPI3_MOSI_PIN           PB5
 
 #undef USE_I2C
+#undef USE_OVERCLOCK
 
 #define USE_TARGET_CONFIG
 #define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
@@ -180,7 +183,30 @@
 #define DEFAULT_CURRENT_METER_SOURCE   CURRENT_METER_ADC
 #define CURRENT_METER_ADC_PIN          PA1
 #define VBAT_ADC_PIN                   PA0
-#define CURRENT_METER_SCALE_DEFAULT    16000
+#define CURRENT_METER_SCALE_DEFAULT    400
 #define VBAT_SCALE                     109
 
 #define CAMERA_CONTROL_PIN             PB6    // define dedicated camera_osd_control pin
+#define RSSI_ADC_PIN                   PA5
+
+#if defined(HELIO_RACE)
+#define HELIO_PROFILE_PITCH_Q 800
+#define HELIO_PROFILE_ROLL_Q 800
+#define HELIO_PROFILE_YAW_Q 450
+#define HELIO_PROFILE_DYN_GAIN 0
+#elif defined(HELIO_FREESTYLE)
+#define HELIO_PROFILE_PITCH_Q 2500
+#define HELIO_PROFILE_ROLL_Q 2500
+#define HELIO_PROFILE_YAW_Q 2500
+#define HELIO_PROFILE_DYN_GAIN 0
+#elif defined(HELIO_BANGGOOD_SPECIAL)
+#define HELIO_PROFILE_PITCH_Q 2000
+#define HELIO_PROFILE_ROLL_Q 2000
+#define HELIO_PROFILE_YAW_Q 1000
+#define HELIO_PROFILE_DYN_GAIN 90
+#else
+#define HELIO_PROFILE_PITCH_Q 3500
+#define HELIO_PROFILE_ROLL_Q 3500
+#define HELIO_PROFILE_YAW_Q 2500
+#define HELIO_PROFILE_DYN_GAIN 20
+#endif

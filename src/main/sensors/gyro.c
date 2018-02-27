@@ -58,7 +58,9 @@
 #include "drivers/accgyro_legacy/accgyro_l3gd20.h"
 #endif
 
+#ifdef USE_GYRO_IMUF9001
 #include "drivers/accgyro/accgyro_imuf9001.h"
+#endif //USE_GYRO_IMUF9001
 #include "drivers/accgyro/gyro_sync.h"
 #include "drivers/bus_spi.h"
 #include "drivers/io.h"
@@ -177,16 +179,15 @@ STATIC_UNIT_TESTED gyroSensor_t * const gyroSensorPtr = &gyroSensor1;
 STATIC_UNIT_TESTED gyroDev_t * const gyroDevPtr = &gyroSensor1.gyroDev;
 #endif
 
-#if defined(USE_GYRO_IMUF9001)
-// do nothing
-#else
-#if defined(USE_GYRO_FAST_KALMAN)
-static void gyroInitFilterKalman(gyroSensor_t *gyroSensor, uint16_t gyro_filter_q, uint16_t gyro_filter_r, uint16_t gyro_filter_p);
-#endif // USE_GYRO_FAST_KALMAN
-#if defined(USE_GYRO_BIQUAD_RC_FIR2)
-static void gyroInitFilterBiquadRCFIR2(gyroSensor_t *gyroSensor, uint16_t lpfHz);
-#endif // USE_GYRO_BIQUAD_RC_FIR2
-#endif // USE_GYRO_FAST_KALMAN
+#ifndef USE_GYRO_IMUF9001
+    #if defined(USE_GYRO_FAST_KALMAN)
+    static void gyroInitFilterKalman(gyroSensor_t *gyroSensor, uint16_t gyro_filter_q, uint16_t gyro_filter_r, uint16_t gyro_filter_p);
+    static void gyroInitFilterFixedKKalman(gyroSensor_t *gyroSensor, uint16_t lpfHz);
+    #endif // USE_GYRO_FAST_KALMAN
+    #if defined(USE_GYRO_BIQUAD_RC_FIR2)
+    static void gyroInitFilterBiquadRCFIR2(gyroSensor_t *gyroSensor, uint16_t lpfHz);
+    #endif // USE_GYRO_BIQUAD_RC_FIR2
+#endif //!USE_GYRO_IMUF9001
 
 static void gyroInitSensorFilters(gyroSensor_t *gyroSensor);
 static void gyroInitLowpassFilterLpf(gyroSensor_t *gyroSensor, int slot, int type, uint16_t lpfHz, int order);
@@ -217,7 +218,7 @@ PG_RESET_TEMPLATE(gyroConfig_t, gyroConfig,
     .gyroMovementCalibrationThreshold = 48,
     .gyro_sync_denom = GYRO_SYNC_DENOM_DEFAULT,
     .gyro_lpf = GYRO_LPF_256HZ,
-    .gyro_soft_lpf_type = FILTER_PT1,
+    .gyro_soft_lpf_type = FILTER_BIQUAD,
     .gyro_soft_lpf_hz = 90,
     .gyro_high_fsr = false,
     .gyro_use_32khz = false,
@@ -228,16 +229,16 @@ PG_RESET_TEMPLATE(gyroConfig_t, gyroConfig,
     .gyro_soft_notch_cutoff_2 = 0,
     .checkOverflow = GYRO_OVERFLOW_CHECK_ALL_AXES,
     .imuf_mode = 32,
-    .imuf_pitch_q = 3000,
+    .imuf_pitch_q = HELIO_PROFILE_PITCH_Q,
     .imuf_pitch_r = 88,
-    .imuf_roll_q = 3000,
+    .imuf_roll_q = HELIO_PROFILE_ROLL_Q,
     .imuf_roll_r = 88,
-    .imuf_yaw_q = 1500,
+    .imuf_yaw_q = HELIO_PROFILE_YAW_Q,
     .imuf_yaw_r = 88,
-    .imuf_pitch_lpf_cutoff_hz = 120.0f,
-    .imuf_roll_lpf_cutoff_hz = 120.0f,
-    .imuf_yaw_lpf_cutoff_hz = 120.0f,
-    .imuf_dyn_gain = 20,
+    .imuf_pitch_lpf_cutoff_hz = 150.0f,
+    .imuf_roll_lpf_cutoff_hz = 150.0f,
+    .imuf_yaw_lpf_cutoff_hz = 150.0f,
+    .imuf_dyn_gain = HELIO_PROFILE_DYN_GAIN,
     .gyro_offset_yaw = 0,
 );
 #else
@@ -261,7 +262,7 @@ PG_RESET_TEMPLATE(gyroConfig_t, gyroConfig,
     .gyro_soft_notch_cutoff_1 = 0,
     .gyro_soft_notch_hz_2 = 0,
     .gyro_soft_notch_cutoff_2 = 0,
-    .checkOverflow = GYRO_OVERFLOW_CHECK_ALL_AXES,
+    .checkOverflow = GYRO_OVERFLOW_CHECK_YAW,
     .gyro_soft_lpf_hz_2 = 0,
     .gyro_filter_q = 400,
     .gyro_filter_r = 88,
@@ -881,9 +882,7 @@ static void gyroInitFilterDynamicNotch(gyroSensor_t *gyroSensor)
 }
 #endif
 
-#if defined(USE_GYRO_IMUF9001)
-// do nothing
-#else
+#ifndef USE_GYRO_IMUF9001
 #if defined(USE_GYRO_FAST_KALMAN)
 static void gyroInitFilterKalman(gyroSensor_t *gyroSensor, uint16_t gyro_filter_q, uint16_t gyro_filter_r, uint16_t gyro_filter_p)
 {
@@ -894,6 +893,18 @@ static void gyroInitFilterKalman(gyroSensor_t *gyroSensor, uint16_t gyro_filter_
         gyroSensor->fastKalmanApplyFn = (filterApplyFnPtr)fastKalmanUpdate;
         for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
             fastKalmanInit(&gyroSensor->fastKalman[axis], gyro_filter_q, gyro_filter_r, gyro_filter_p);
+        }
+    }
+}
+static void gyroInitFilterFixedKKalman(gyroSensor_t *gyroSensor, uint16_t lpfHz)
+{
+    gyroSensor->fixedKKalmanApplyFn = nullFilterApply;
+    const uint32_t gyroFrequencyNyquist = 1000000 / 2 / gyro.targetLooptime;
+    const float gyroDt = (float) gyro.targetLooptime * 0.000001f;
+    if (lpfHz && lpfHz <= gyroFrequencyNyquist) {  // Initialisation needs to happen once samplingrate is known
+        gyroSensor->fixedKKalmanApplyFn = (filterApplyFnPtr)fixedKKalmanUpdate;
+        for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+            fixedKKalmanInit(&gyroSensor->fastKalman[axis], lpfHz, gyroDt);
         }
     }
 }
@@ -912,7 +923,7 @@ static void gyroInitFilterBiquadRCFIR2(gyroSensor_t *gyroSensor, uint16_t lpfHz)
     }
 }
 #endif // USE_GYRO_BIQUAD_RC_FIR2
-#endif // USE_GYRO_IMUF9001
+#endif //!USE_GYRO_IMUF9001
 
 static void gyroInitSensorFilters(gyroSensor_t *gyroSensor)
 {
@@ -1030,11 +1041,6 @@ static void gyroSetCalibrationCycles(gyroSensor_t *gyroSensor)
 
 void gyroStartCalibration(bool isFirstArmingCalibration)
 {
-    #ifdef USE_GYRO_IMUF9001
-        if (imufStartCalibration(isFirstArmingCalibration, &(gyroSensor1.gyroDev))) {
-            gyroSensor1.calibration.calibratingG = IMUF_NOT_CALIBRATING;
-        }
-    #else
     if (!(isFirstArmingCalibration && firstArmingCalibrationWasStarted)) {
         gyroSetCalibrationCycles(&gyroSensor1);
 #ifdef USE_DUAL_GYRO
@@ -1045,7 +1051,6 @@ void gyroStartCalibration(bool isFirstArmingCalibration)
             firstArmingCalibrationWasStarted = true;
         }
     }
-    #endif
 }
 
 bool isFirstArmingGyroCalibrationRunning(void)
@@ -1064,9 +1069,14 @@ STATIC_UNIT_TESTED void performGyroCalibration(gyroSensor_t *gyroSensor, uint8_t
             gyroSensor->gyroDev.gyroZero[axis] = 0.0f;
         }
 
-        // Sum up CALIBRATING_GYRO_TIME_US readings
+        // Sum up CALIBRATING_GYRO_CYCLES readings
+        #ifdef USE_GYRO_IMUF9001
+        gyroSensor->calibration.sum[axis] += (int32_t)(gyroSensor->gyroDev.gyroADC[axis] * 16.4f); //imuf sends floats, so we need to scale it because bf is hard coded to look for float times 16.4
+        devPush(&gyroSensor->calibration.var[axis], (gyroSensor->gyroDev.gyroADC[axis] * 16.4f) ); //imuf sends floats, so we need to scale it because bf is hard coded to look for float times 16.4
+        #else
         gyroSensor->calibration.sum[axis] += gyroSensor->gyroDev.gyroADCRaw[axis];
         devPush(&gyroSensor->calibration.var[axis], gyroSensor->gyroDev.gyroADCRaw[axis]);
+        #endif
 
         if (isOnFinalGyroCalibrationCycle(&gyroSensor->calibration)) {
             const float stddev = devStandardDeviation(&gyroSensor->calibration.var[axis]);
@@ -1093,7 +1103,14 @@ STATIC_UNIT_TESTED void performGyroCalibration(gyroSensor_t *gyroSensor, uint8_t
             beeper(BEEPER_GYRO_CALIBRATED);
         }
     }
-    --gyroSensor->calibration.cyclesRemaining;
+    #ifdef USE_GYRO_IMUF9001
+    if (gyroSensor->calibration.calibratingG == gyroCalculateCalibratingCycles())
+    {
+        //first calibration cycle needs to send calibration command
+        imufStartCalibration();
+    }
+    #endif
+    --gyroSensor->calibration.calibratingG;
 
 }
 
@@ -1220,7 +1237,7 @@ static FAST_CODE FAST_CODE_NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSens
     #endif
     gyroSensor->gyroDev.dataReady = false;
 
-#ifdef USE_GYRO_IMUF9001
+    #ifdef USE_GYRO_IMUF9001
         const timeDelta_t sampleDeltaUs = currentTimeUs - accumulationLastTimeSampledUs;
         accumulationLastTimeSampledUs = currentTimeUs;
         accumulatedMeasurementTimeUs += sampleDeltaUs;
@@ -1237,6 +1254,15 @@ static FAST_CODE FAST_CODE_NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSens
                 accumulatedMeasurements[axis] += 0.5f * (gyroPrevious[axis] + gyroADCf) * sampleDeltaUs;
                 gyroPrevious[axis] = gyroADCf;
             }
+        }
+        if (!isGyroSensorCalibrationComplete(gyroSensor)) {
+            performGyroCalibration(gyroSensor, gyroConfig()->gyroMovementCalibrationThreshold);
+            // Reset gyro values to zero to prevent other code from using uncalibrated data
+            gyro.gyroADCf[X] = 0.0f;
+            gyro.gyroADCf[Y] = 0.0f;
+            gyro.gyroADCf[Z] = 0.0f;
+            // still calibrating, so no need to further process gyro data
+            return;
         }
         return;
     #endif
@@ -1295,11 +1321,15 @@ static FAST_CODE FAST_CODE_NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSens
 #if defined(USE_GYRO_IMUF9001)
  // do nothing
 #else
+#ifndef USE_GYRO_IMUF9001
 #if defined(USE_GYRO_BIQUAD_RC_FIR2)
 #if defined(USE_GYRO_FAST_KALMAN)
             switch(gyroConfig()->gyro_stage2_filter_type){
             case STAGE2_FILTER_FAST_KALMAN:
                 gyroADCf = gyroSensor->fastKalmanApplyFn((filter_t *)&gyroSensor->fastKalman[axis], gyroADCf);
+                break;
+            case STAGE2_FILTER_FIXED_K_KALMAN:
+                gyroADCf = gyroSensor->fixedKKalmanApplyFn((filter_t *)&gyroSensor->fastKalman[axis], gyroADCf);
                 break;
 #else
             switch(STAGE2_FILTER_BIQUAD_RC_FIR2) {
@@ -1311,7 +1341,7 @@ static FAST_CODE FAST_CODE_NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSens
                 break;
             }
 #endif // USE_GYRO_BIQUAD_RC_FIR2
-#endif // USE_GYRO_IMUF9001
+#endif //USE_GYRO_IMUF9001
 #ifdef USE_GYRO_DATA_ANALYSE
             gyroADCf = gyroSensor->notchFilterDynApplyFn((filter_t *)&gyroSensor->notchFilterDyn[axis], gyroADCf);
 #endif
@@ -1350,6 +1380,9 @@ static FAST_CODE FAST_CODE_NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSens
             case STAGE2_FILTER_FAST_KALMAN:
                 // apply fast kalman
                 gyroADCf = gyroSensor->fastKalmanApplyFn((filter_t *)&gyroSensor->fastKalman[axis], gyroADCf);
+                break;
+            case STAGE2_FILTER_FIXED_K_KALMAN:
+                gyroADCf = gyroSensor->fixedKKalmanApplyFn((filter_t *)&gyroSensor->fastKalman[axis], gyroADCf);
                 break;
 #else
             switch(STAGE2_FILTER_BIQUAD_RC_FIR2) {

@@ -90,6 +90,13 @@ typedef enum {
 
 typedef enum {
     FILTER_LPF,    // 2nd order Butterworth section
+    KD_FILTER_CLASSIC = 0,
+    KD_FILTER_SP,
+    KD_FILTER_NOSP,
+} kdFilterStyle_e;
+
+typedef enum {
+    FILTER_LPF,
     FILTER_NOTCH,
     FILTER_BPF,
     FILTER_LPF1,   // 1st order Butterworth section
@@ -99,6 +106,7 @@ typedef enum {
     STAGE2_FILTER_NONE = 0,
     STAGE2_FILTER_BIQUAD_RC_FIR2,
     STAGE2_FILTER_FAST_KALMAN,
+    STAGE2_FILTER_FIXED_K_KALMAN
 } stage2FilterType_e;
 
 typedef struct firFilter_s {
@@ -134,6 +142,11 @@ float fastKalmanUpdate(fastKalman_t *filter, float input);
 
 void lmaSmoothingInit(laggedMovingAverage_t *filter, uint8_t windowSize, float weight);
 float lmaSmoothingUpdate(laggedMovingAverage_t *filter, float input);
+void fixedKKalmanInit(fastKalman_t *filter, uint16_t f_cut, float dT);
+float fixedKKalmanUpdate(fastKalman_t *filter, float input);
+
+// not exactly correct, but very very close and much much faster
+#define filterGetNotchQApprox(centerFreq, cutoff)   ((float)(cutoff * centerFreq) / ((float)(centerFreq - cutoff) * (float)(centerFreq + cutoff)))
 
 float pt1FilterGain(uint16_t f_cut, float dT);
 void pt1FilterInit(pt1Filter_t *filter, float k);
