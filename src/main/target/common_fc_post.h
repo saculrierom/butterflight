@@ -121,4 +121,7 @@
 
 #if defined(USE_FLASH_M25P16)
 #define USE_FLASH
+// Disable filters for IMUF
+#ifdef USE_GYRO_IMUF9001
+#undef USE_GYRO_FAST_KALMAN
 #endif
