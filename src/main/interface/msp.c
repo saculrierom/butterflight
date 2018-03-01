@@ -1680,7 +1680,7 @@ static mspResult_e mspProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
         // reinitialize the PID filters with the new values
         pidInitFilters(currentPidProfile);
         break;
-
+#ifdef USE_GYRO_FAST_KALMAN
     case MSP_SET_ADVANCED_FILTER_CONFIG :
         gyroConfigMutable()->gyro_soft_lpf_hz_2 = sbufReadU16(src);
         gyroConfigMutable()->gyro_filter_q = sbufReadU16(src);
@@ -1688,7 +1688,7 @@ static mspResult_e mspProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
         gyroConfigMutable()->gyro_filter_p = sbufReadU16(src);
         gyroConfigMutable()->gyro_stage2_filter_type = sbufReadU8(src);
         break;
-
+#endif
     case MSP_SET_PID_ADVANCED:
         sbufReadU16(src);
         sbufReadU16(src);
