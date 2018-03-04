@@ -77,7 +77,9 @@
 #ifdef USE_USB_MSC
 #include "drivers/usb_msc.h"
 #endif
+#ifdef USE_DMA_SPI_DEVICE
 #include "drivers/dma_spi.h"
+#endif //USE_DMA_SPI_DEVICE
 
 #include "fc/config.h"
 #include "fc/fc_init.h"

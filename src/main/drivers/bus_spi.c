@@ -25,9 +25,6 @@
 #include <platform.h>
 
 #ifdef USE_SPI
-#ifndef GYRO_READ_TIMEOUT
-    #define GYRO_READ_TIMEOUT 20
-#endif
 
 #include "drivers/bus.h"
 #include "drivers/bus_spi.h"
@@ -35,8 +32,13 @@
 #include "drivers/exti.h"
 #include "drivers/io.h"
 #include "drivers/rcc.h"
+#ifdef USE_DMA_SPI_DEVICE
+#ifndef GYRO_READ_TIMEOUT
+    #define GYRO_READ_TIMEOUT 20
+#endif //GYRO_READ_TIMEOUT
 #include "drivers/dma_spi.h"
 #include "drivers/time.h"
+#endif //USE_DMA_SPI_DEVICE
 
 spiDevice_t spiDevice[SPIDEV_COUNT];
 
@@ -121,10 +123,10 @@ uint32_t spiTimeoutUserCallback(SPI_TypeDef *instance)
     return spiDevice[device].errorCount;
 }
 
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
+
 bool spiBusTransfer(const busDevice_t *bus, const uint8_t *txData, uint8_t *rxData, int length)
 {
+
     #ifdef USE_DMA_SPI_DEVICE
         (void)(bus);
         uint32_t timeoutCheck = millis();
@@ -149,7 +151,6 @@ bool spiBusTransfer(const busDevice_t *bus, const uint8_t *txData, uint8_t *rxDa
 
     return true;
 }
-#pragma GCC pop_options
 
 uint16_t spiGetErrorCounter(SPI_TypeDef *instance)
 {
