@@ -90,6 +90,13 @@ typedef enum {
 
 typedef enum {
     FILTER_LPF,    // 2nd order Butterworth section
+    KD_FILTER_CLASSIC = 0,
+    KD_FILTER_SP,
+    KD_FILTER_NOSP,
+} kdFilterStyle_e;
+
+typedef enum {
+    FILTER_LPF,
     FILTER_NOTCH,
     FILTER_BPF,
     FILTER_LPF1,   // 1st order Butterworth section
