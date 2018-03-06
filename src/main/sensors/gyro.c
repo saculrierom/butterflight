@@ -1040,11 +1040,6 @@ static void gyroSetCalibrationCycles(gyroSensor_t *gyroSensor)
 
 void gyroStartCalibration(bool isFirstArmingCalibration)
 {
-    #ifdef USE_GYRO_IMUF9001
-        if (imufStartCalibration(isFirstArmingCalibration, &(gyroSensor1.gyroDev))) {
-            gyroSensor1.calibration.calibratingG = IMUF_NOT_CALIBRATING;
-        }
-    #else
     if (!(isFirstArmingCalibration && firstArmingCalibrationWasStarted)) {
         gyroSetCalibrationCycles(&gyroSensor1);
 #ifdef USE_DUAL_GYRO
@@ -1055,7 +1050,6 @@ void gyroStartCalibration(bool isFirstArmingCalibration)
             firstArmingCalibrationWasStarted = true;
         }
     }
-    #endif
 }
 
 bool isFirstArmingGyroCalibrationRunning(void)
@@ -1074,9 +1068,14 @@ STATIC_UNIT_TESTED void performGyroCalibration(gyroSensor_t *gyroSensor, uint8_t
             gyroSensor->gyroDev.gyroZero[axis] = 0.0f;
         }
 
-        // Sum up CALIBRATING_GYRO_TIME_US readings
+        // Sum up CALIBRATING_GYRO_CYCLES readings
+        #ifdef USE_GYRO_IMUF9001
+        gyroSensor->calibration.sum[axis] += (int32_t)(gyroSensor->gyroDev.gyroADC[axis] * 16.4f); //imuf sends floats, so we need to scale it because bf is hard coded to look for float times 16.4
+        devPush(&gyroSensor->calibration.var[axis], (gyroSensor->gyroDev.gyroADC[axis] * 16.4f) ); //imuf sends floats, so we need to scale it because bf is hard coded to look for float times 16.4
+        #else
         gyroSensor->calibration.sum[axis] += gyroSensor->gyroDev.gyroADCRaw[axis];
         devPush(&gyroSensor->calibration.var[axis], gyroSensor->gyroDev.gyroADCRaw[axis]);
+        #endif
 
         if (isOnFinalGyroCalibrationCycle(&gyroSensor->calibration)) {
             const float stddev = devStandardDeviation(&gyroSensor->calibration.var[axis]);
@@ -1103,7 +1102,14 @@ STATIC_UNIT_TESTED void performGyroCalibration(gyroSensor_t *gyroSensor, uint8_t
             beeper(BEEPER_GYRO_CALIBRATED);
         }
     }
-    --gyroSensor->calibration.cyclesRemaining;
+    #ifdef USE_GYRO_IMUF9001
+    if (gyroSensor->calibration.calibratingG == gyroCalculateCalibratingCycles())
+    {
+        //first calibration cycle needs to send calibration command
+        imufStartCalibration();
+    }
+    #endif
+    --gyroSensor->calibration.calibratingG;
 
 }
 
@@ -1230,7 +1236,7 @@ static FAST_CODE NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSensor, timeUs
     #endif
     gyroSensor->gyroDev.dataReady = false;
 
-#ifdef USE_GYRO_IMUF9001
+    #ifdef USE_GYRO_IMUF9001
         const timeDelta_t sampleDeltaUs = currentTimeUs - accumulationLastTimeSampledUs;
         accumulationLastTimeSampledUs = currentTimeUs;
         accumulatedMeasurementTimeUs += sampleDeltaUs;
@@ -1247,6 +1253,15 @@ static FAST_CODE NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSensor, timeUs
                 accumulatedMeasurements[axis] += 0.5f * (gyroPrevious[axis] + gyroADCf) * sampleDeltaUs;
                 gyroPrevious[axis] = gyroADCf;
             }
+        }
+        if (!isGyroSensorCalibrationComplete(gyroSensor)) {
+            performGyroCalibration(gyroSensor, gyroConfig()->gyroMovementCalibrationThreshold);
+            // Reset gyro values to zero to prevent other code from using uncalibrated data
+            gyro.gyroADCf[X] = 0.0f;
+            gyro.gyroADCf[Y] = 0.0f;
+            gyro.gyroADCf[Z] = 0.0f;
+            // still calibrating, so no need to further process gyro data
+            return;
         }
         return;
     #endif
