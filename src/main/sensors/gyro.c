@@ -182,6 +182,7 @@ STATIC_UNIT_TESTED gyroDev_t * const gyroDevPtr = &gyroSensor1.gyroDev;
 #ifndef USE_GYRO_IMUF9001
     #if defined(USE_GYRO_FAST_KALMAN)
     static void gyroInitFilterKalman(gyroSensor_t *gyroSensor, uint16_t gyro_filter_q, uint16_t gyro_filter_r, uint16_t gyro_filter_p);
+    static void gyroInitFilterFixedKKalman(gyroSensor_t *gyroSensor, uint16_t lpfHz);
     #endif // USE_GYRO_FAST_KALMAN
     #if defined(USE_GYRO_BIQUAD_RC_FIR2)
     static void gyroInitFilterBiquadRCFIR2(gyroSensor_t *gyroSensor, uint16_t lpfHz);
@@ -894,6 +895,18 @@ static void gyroInitFilterKalman(gyroSensor_t *gyroSensor, uint16_t gyro_filter_
         }
     }
 }
+static void gyroInitFilterFixedKKalman(gyroSensor_t *gyroSensor, uint16_t lpfHz)
+{
+    gyroSensor->fixedKKalmanApplyFn = nullFilterApply;
+    const uint32_t gyroFrequencyNyquist = 1000000 / 2 / gyro.targetLooptime;
+    const float gyroDt = (float) gyro.targetLooptime * 0.000001f;
+    if (lpfHz && lpfHz <= gyroFrequencyNyquist) {  // Initialisation needs to happen once samplingrate is known
+        gyroSensor->fixedKKalmanApplyFn = (filterApplyFnPtr)fixedKKalmanUpdate;
+        for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+            fixedKKalmanInit(&gyroSensor->fastKalman[axis], lpfHz, gyroDt);
+        }
+    }
+}
 #endif // USE_GYRO_FAST_KALMAN
 #if defined(USE_GYRO_BIQUAD_RC_FIR2)
 static void gyroInitFilterBiquadRCFIR2(gyroSensor_t *gyroSensor, uint16_t lpfHz)
@@ -1299,6 +1312,9 @@ static FAST_CODE NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSensor, timeUs
             case STAGE2_FILTER_FAST_KALMAN:
                 gyroADCf = gyroSensor->fastKalmanApplyFn((filter_t *)&gyroSensor->fastKalman[axis], gyroADCf);
                 break;
+            case STAGE2_FILTER_FIXED_K_KALMAN:
+                gyroADCf = gyroSensor->fixedKKalmanApplyFn((filter_t *)&gyroSensor->fastKalman[axis], gyroADCf);
+                break;
 #else
             switch(STAGE2_FILTER_BIQUAD_RC_FIR2) {
 #endif // USE_GYRO_FAST_KALMAN
@@ -1348,6 +1364,9 @@ static FAST_CODE NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSensor, timeUs
             case STAGE2_FILTER_FAST_KALMAN:
                 // apply fast kalman
                 gyroADCf = gyroSensor->fastKalmanApplyFn((filter_t *)&gyroSensor->fastKalman[axis], gyroADCf);
+                break;
+            case STAGE2_FILTER_FIXED_K_KALMAN:
+                gyroADCf = gyroSensor->fixedKKalmanApplyFn((filter_t *)&gyroSensor->fastKalman[axis], gyroADCf);
                 break;
 #else
             switch(STAGE2_FILTER_BIQUAD_RC_FIR2) {
