@@ -330,3 +330,5 @@
 // additionnal advanced filter settings
 #define MSP_ADVANCED_FILTER_CONFIG 225         //out message
 #define MSP_SET_ADVANCED_FILTER_CONFIG 226     //in message
+#define MSP_IMUF_CONFIG                9001
+#define MSP_SET_IMUF_CONFIG            9002

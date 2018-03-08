@@ -1179,6 +1179,21 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst)
         sbufWriteU16(dst, gyroConfig()->gyro_soft_notch_cutoff_2);
         sbufWriteU8(dst, currentPidProfile->dterm_filter_type);
         break;
+#ifdef USE_GYRO_IMUF9001 
+    case MSP_IMUF_CONFIG :
+        sbufWriteU16(dst, gyroConfig()->imuf_pitch_lpf_cutoff_hz);
+        sbufWriteU16(dst, gyroConfig()->imuf_roll_lpf_cutoff_hz);
+        sbufWriteU16(dst, gyroConfig()->imuf_yaw_lpf_cutoff_hz);
+        sbufWriteU16(dst, gyroConfig()->imuf_pitch_q);
+        sbufWriteU16(dst, gyroConfig()->imuf_roll_q);
+        sbufWriteU16(dst, gyroConfig()->imuf_yaw_q);
+        sbufWriteU16(dst, currentPidProfile->dterm_lpf_hz);        
+        sbufWriteU16(dst, currentPidProfile->dterm_notch_hz);
+        sbufWriteU16(dst, currentPidProfile->dterm_notch_cutoff);
+        sbufWriteU8(dst, currentPidProfile->dterm_filter_type);
+        sbufWriteU8(dst, currentPidProfile->dterm_filter_style);
+        break;
+#endif
 #ifdef USE_GYRO_FAST_KALMAN
     case MSP_ADVANCED_FILTER_CONFIG :
         sbufWriteU16(dst, gyroConfig()->gyro_soft_lpf_hz_2);
@@ -1656,6 +1671,26 @@ static mspResult_e mspProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
         // reinitialize the PID filters with the new values
         pidInitFilters(currentPidProfile);
         break;
+#ifdef USE_GYRO_IMUF9001
+    case MSP_SET_IMUF_CONFIG:
+        gyroConfig()->imuf_pitch_lpf_cutoff_hz = sbufReadU16(src);
+        gyroConfig()->imuf_roll_lpf_cutoff_hz = sbufReadU16(src);
+        gyroConfig()->imuf_yaw_lpf_cutoff_hz = sbufReadU16(src);
+        gyroConfig()->imuf_pitch_q = sbufReadU16(src);
+        gyroConfig()->imuf_roll_q = sbufReadU16(src);
+        gyroConfig()->imuf_yaw_q = sbufReadU16(src);
+        currentPidProfile->dterm_lpf_hz = sbufReadU16(src);
+        currentPidProfile->dterm_notch_hz = sbufReadU16(src);
+        currentPidProfile->dterm_notch_cutoff = sbufReadU16(src);
+        currentPidProfile->dterm_filter_type = sbufReadU8(src);
+        currentPidProfile->dterm_filter_style = sbufReadU8(src);
+        // reinitialize the gyro filters with the new values
+        validateAndFixGyroConfig();
+        gyroInitFilters();
+        // reinitialize the PID filters with the new values
+        pidInitFilters(currentPidProfile);
+        break;
+#endif
 #ifdef USE_GYRO_FAST_KALMAN
     case MSP_SET_ADVANCED_FILTER_CONFIG :
         gyroConfigMutable()->gyro_soft_lpf_hz_2 = sbufReadU16(src);
