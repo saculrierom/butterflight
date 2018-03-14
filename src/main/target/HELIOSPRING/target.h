@@ -186,22 +186,7 @@
 #define VBAT_SCALE                     109
 
 #define CAMERA_CONTROL_PIN             PB6    // define dedicated camera_osd_control pin
-#define RSSI_ADC_PIN                   PA5
 
-#if defined(HELIO_RACE)
-#define HELIO_PROFILE_PITCH_Q 800
-#define HELIO_PROFILE_ROLL_Q 800
-#define HELIO_PROFILE_YAW_Q 450
-#elif defined(HELIO_FREESTYLE)
-#define HELIO_PROFILE_PITCH_Q 2500
-#define HELIO_PROFILE_ROLL_Q 2500
-#define HELIO_PROFILE_YAW_Q 2500
-#elif defined(HELIO_BANGGOOD_SPECIAL)
-#define HELIO_PROFILE_PITCH_Q 2000
-#define HELIO_PROFILE_ROLL_Q 2000
+#define HELIO_PROFILE_PITCH_Q 1500
+#define HELIO_PROFILE_ROLL_Q 1500
 #define HELIO_PROFILE_YAW_Q 1000
-#else
-#define HELIO_PROFILE_PITCH_Q 3500
-#define HELIO_PROFILE_ROLL_Q 3500
-#define HELIO_PROFILE_YAW_Q 2500
-#endif
