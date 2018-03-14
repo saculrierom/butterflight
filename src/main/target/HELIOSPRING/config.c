@@ -41,7 +41,6 @@ void targetConfiguration(void) {
     gyroConfigMutable()->gyro_soft_lpf_hz = 0;
     gyroConfigMutable()->gyro_soft_notch_hz_1 = 0;
     gyroConfigMutable()->gyro_soft_notch_hz_2 = 0;
-    gyroConfigMutable()->gyroMovementCalibrationThreshold = 5;
 
     for (uint8_t pidProfileIndex = 0; pidProfileIndex < MAX_PROFILE_COUNT; pidProfileIndex++) {
         pidProfile_t *pidProfile = pidProfilesMutable(pidProfileIndex);
@@ -54,6 +53,8 @@ void targetConfiguration(void) {
         pidProfile->pid[PID_ROLL].P = 28;	
         pidProfile->pid[PID_ROLL].I = 70;	
         pidProfile->pid[PID_ROLL].D = 20;
+        pidProfile->pid[PID_YAW].P = 30;
+        pidProfile->pid[PID_YAW].I = 60;
     #elif defined(HELIO_FREESTYLE)
         //optimizng for squished-x
         pidProfile->pid[PID_PITCH].P = 40;	
@@ -62,16 +63,20 @@ void targetConfiguration(void) {
         pidProfile->pid[PID_ROLL].P = 43;	
         pidProfile->pid[PID_ROLL].I = 45;	
         pidProfile->pid[PID_ROLL].D = 25;
+        pidProfile->pid[PID_YAW].P = 30;
+        pidProfile->pid[PID_YAW].I = 60;
     #elif defined(HELIO_BANGOOD_SPECIAL)
         //optimizng for IDKWTF set the normal defaults
     #else
         //optimizng for true-x and most standard tunes.
-        pidProfile->pid[PID_PITCH].P = 45;	
+        pidProfile->pid[PID_PITCH].P = 40;	
         pidProfile->pid[PID_PITCH].I = 50;	
-        pidProfile->pid[PID_PITCH].D = 30;	
-        pidProfile->pid[PID_ROLL].P = 45;	
+        pidProfile->pid[PID_PITCH].D = 20;	
+        pidProfile->pid[PID_ROLL].P = 40;	
         pidProfile->pid[PID_ROLL].I = 50;	
-        pidProfile->pid[PID_ROLL].D = 30;
+        pidProfile->pid[PID_ROLL].D = 20;
+        pidProfile->pid[PID_YAW].P = 40;	
+        pidProfile->pid[PID_YAW].I = 50;
     #endif
 
         /* Setpoints */
