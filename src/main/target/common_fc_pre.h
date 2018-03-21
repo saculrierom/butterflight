@@ -67,6 +67,8 @@
 #define I2C3_OVERCLOCK true
 #define I2C4_OVERCLOCK true
 #define USE_GYRO_DATA_ANALYSE
+#define USE_OVERCLOCK
+#define USE_ADC_INTERNAL
 #endif
 
 #if defined(STM32F4) || defined(STM32F7)
@@ -135,6 +137,7 @@
 #define USE_CAMERA_CONTROL
 #define USE_CMS
 #define USE_COPY_PROFILE_CMS_MENU
+#define USE_EXTENDED_CMS_MENUS
 #define USE_DSHOT_DMAR
 #define USE_GYRO_OVERFLOW_CHECK
 #define USE_HUFFMAN
@@ -155,7 +158,7 @@
 #define USE_VTX_CONTROL
 #define USE_VTX_SMARTAUDIO
 #define USE_VTX_TRAMP
-#define USE_GYRO_BIQUAD_RC_FIR2
+#define USE_GYRO_LPF2
 
 #ifdef USE_SERIALRX_SPEKTRUM
 #define USE_SPEKTRUM_BIND

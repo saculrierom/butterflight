@@ -22,6 +22,7 @@
 #undef USE_GYRO_OVERFLOW_CHECK
 #define USE_GYRO_BIQUAD_RC_FIR2
 #define USE_GYRO_FAST_KALMAN
+#undef USE_GYRO_LPF2
 
 #undef USE_SERIALRX_XBUS
 #undef USE_TELEMETRY_LTM
@@ -38,7 +39,8 @@
 
 #define LED0_PIN                PB3
 
-#define BEEPER                  PC15
+#define USE_BEEPER
+#define BEEPER_PIN              PC15
 #define BEEPER_INVERTED
 
 #define USE_EXTI
