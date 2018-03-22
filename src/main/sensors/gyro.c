@@ -64,6 +64,7 @@
 #include "drivers/accgyro/gyro_sync.h"
 #include "drivers/bus_spi.h"
 #include "drivers/io.h"
+#include "drivers/time.h"
 
 #include "fc/config.h"
 #include "fc/runtime_config.h"
@@ -108,6 +109,9 @@ typedef struct gyroCalibration_s {
 } gyroCalibration_t;
 
 bool firstArmingCalibrationWasStarted = false;
+#ifdef USE_GYRO_IMUF9001
+uint32_t lastImufExtiTime = 0;
+#endif
 
 #if GYRO_LPF_ORDER_MAX > BIQUAD_LPF_ORDER_MAX
 #error "GYRO_LPF_ORDER_MAX is larger than BIQUAD_LPF_ORDER_MAX"
@@ -238,7 +242,6 @@ PG_RESET_TEMPLATE(gyroConfig_t, gyroConfig,
     .imuf_pitch_lpf_cutoff_hz = 150.0f,
     .imuf_roll_lpf_cutoff_hz = 150.0f,
     .imuf_yaw_lpf_cutoff_hz = 150.0f,
-    .imuf_dyn_gain = HELIO_PROFILE_DYN_GAIN,
     .gyro_offset_yaw = 0,
 );
 #else
@@ -1008,6 +1011,30 @@ static bool isOnFinalGyroCalibrationCycle(const gyroCalibration_t *gyroCalibrati
 }
 
 #ifdef USE_GYRO_IMUF9001
+
+bool gyroIsSane(void)
+{
+    if (micros() - lastImufExtiTime > 1000)
+    {
+        //no EXTI in 1000 us, that's bad
+        return false;
+    }
+
+    // make sure calibration is complete
+    if( !isGyroSensorCalibrationComplete(&gyroSensor1) )
+    {
+        return false;
+    }
+
+    //100 CRC errors is a lot
+    if (imufCrcErrorCount > 100)
+    {
+        imufCrcErrorCount = 0; //reset error count on this failed arm attempt
+        return false;
+    }
+
+    return true;
+}
 
 uint16_t returnGyroAlignmentForImuf9001(void)
 {
