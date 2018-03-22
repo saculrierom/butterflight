@@ -63,7 +63,10 @@ typedef struct firFilterDenoise_s {
 } firFilterDenoise_t;
 
 typedef struct fastKalman_s {
-    float k;       // "kalman" gain
+    float q;       // process noise covariance
+    float r;       // measurement noise covariance
+    float p;       // estimation error covariance matrix
+    float k;       // kalman gain
     float x;       // state
     float lastX;   // previous state
 } fastKalman_t;
@@ -92,7 +95,6 @@ typedef enum {
 } kdFilterStyle_e;
 
 typedef enum {
-    FILTER_LPF,
     FILTER_LPF,    // 2nd order Butterworth section
     FILTER_NOTCH,
     FILTER_BPF,
@@ -134,16 +136,14 @@ float filterGetNotchQ(uint16_t centerFreq, uint16_t cutoff);
 
 void biquadRCFIR2FilterInit(biquadFilter_t *filter, float k);
 
-void fastKalmanInit(fastKalman_t *filter, float k);
+void fastKalmanInit(fastKalman_t *filter, float q, float r, float p);
 float fastKalmanUpdate(fastKalman_t *filter, float input);
 
-<<<<<<< HEAD
 void fixedKKalmanInit(fastKalman_t *filter, uint16_t f_cut, float dT);
 float fixedKKalmanUpdate(fastKalman_t *filter, float input);
-=======
+
 void lmaSmoothingInit(laggedMovingAverage_t *filter, uint8_t windowSize, float weight);
 float lmaSmoothingUpdate(laggedMovingAverage_t *filter, float input);
->>>>>>> a453063dd74d84afe20d675b8fff8f531a28eead
 
 // not exactly correct, but very very close and much much faster
 #define filterGetNotchQApprox(centerFreq, cutoff)   ((float)(cutoff * centerFreq) / ((float)(centerFreq - cutoff) * (float)(centerFreq + cutoff)))

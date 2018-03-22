@@ -423,9 +423,7 @@ void mpuDetect(gyroDev_t *gyro)
     delay(35);
 
 
-#ifdef USE_DMA_SPI_DEVICE
-    bool ack = false;
-#elif defined(USE_I2C)
+#if defined(USE_I2C)
     if (gyro->bus.bustype == BUSTYPE_NONE) {
         // if no bustype is selected try I2C first.
         gyro->bus.bustype = BUSTYPE_I2C;
@@ -458,16 +456,13 @@ void mpuDetect(gyroDev_t *gyro)
             return;
         }
     }
-    bool ack = false;
 #endif
 
-    if (!ack) {
+
 #ifdef USE_SPI
         gyro->bus.bustype = BUSTYPE_SPI;
         detectSPISensorsAndUpdateDetectionResult(gyro);
 #endif
-        return;
-    }
 }
 
 void mpuGyroInit(gyroDev_t *gyro)

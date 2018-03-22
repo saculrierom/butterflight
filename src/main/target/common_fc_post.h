@@ -98,12 +98,6 @@
 #define ENABLE_DSHOT_DMAR false
 #endif
 
-// Disable filters for IMUF
-#ifdef USE_GYRO_IMUF9001
-#undef USE_GYRO_FAST_KALMAN
-#undef USE_GYRO_BIQUAD_RC_FIR2
-#endif
-
 // Some target doesn't define USE_ADC which USE_ADC_INTERNAL depends on
 #ifndef USE_ADC
 #undef USE_ADC_INTERNAL
