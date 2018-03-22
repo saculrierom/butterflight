@@ -41,6 +41,13 @@
 #include "drivers/stack_check.h"
 #include "drivers/transponder_ir.h"
 #include "drivers/vtx_common.h"
+#ifdef USB_CDC_HID
+//TODO: Make it platform independent in the future
+#include "vcpf4/usbd_cdc_vcp.h"
+#include "usbd_hid_core.h"
+//TODO: Nicer way to handle this...
+#undef MIN
+#endif
 
 #include "fc/config.h"
 #include "fc/fc_core.h"
