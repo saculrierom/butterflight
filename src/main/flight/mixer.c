@@ -49,7 +49,6 @@
 #include "flight/failsafe.h"
 #include "flight/imu.h"
 #include "flight/mixer.h"
-#include "flight/mixer_tricopter.h"
 #include "flight/pid.h"
 
 #include "rx/rx.h"

@@ -60,7 +60,6 @@ typedef enum {
     TIM_USE_PPM           = 0x1,
     TIM_USE_PWM           = 0x2,
     TIM_USE_MOTOR         = 0x4,
-    TIM_USE_SERVO         = 0x8,
     TIM_USE_LED           = 0x10,
     TIM_USE_TRANSPONDER   = 0x20,
     TIM_USE_BEEPER        = 0x40

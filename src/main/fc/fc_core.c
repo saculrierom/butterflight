@@ -83,7 +83,6 @@
 #include "flight/mixer.h"
 #include "flight/navigation.h"
 #include "flight/pid.h"
-#include "flight/servos.h"
 
 
 // June 2013     V2.2-dev
@@ -904,13 +903,6 @@ static void subTaskMotorUpdate(timeUs_t currentTimeUs)
     }
 
     mixTable(currentTimeUs, currentPidProfile->vbatPidCompensation);
-
-#ifdef USE_SERVOS
-    // motor outputs are used as sources for servo mixing, so motors must be calculated using mixTable() before servos.
-    if (isMixerUsingServos()) {
-        writeServos();
-    }
-#endif
 
     writeMotors();
 

@@ -59,7 +59,7 @@ const timerHardware_t timerHardware[USABLE_TIMER_CHANNEL_COUNT] = {
     DEF_TIM(TIM1,  CH1, PA8,  TIM_USE_TRANSPONDER,         0, 0), // Transponder
     // Additional 2 PWM channels available on UART1 RX/TX pins
     // However, when using transponder the timer cannot be used, but no code appears to prevent that right now
-    DEF_TIM(TIM1,  CH2, PA9,  TIM_USE_SERVO | TIM_USE_PWM, 0, 1), // PWM 3
-    DEF_TIM(TIM1,  CH3, PA10, TIM_USE_SERVO | TIM_USE_PWM, 0, 1), // PWM 4
+    DEF_TIM(TIM1,  CH2, PA9,  TIM_USE_PWM, 0, 1), // PWM 3
+    DEF_TIM(TIM1,  CH3, PA10, TIM_USE_PWM, 0, 1), // PWM 4
 
 };

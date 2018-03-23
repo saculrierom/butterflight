@@ -144,7 +144,6 @@
 #include "flight/mixer.h"
 #include "flight/navigation.h"
 #include "flight/pid.h"
-#include "flight/servos.h"
 
 #include "io/rcdevice_cam.h"
 
@@ -556,16 +555,6 @@ void init(void)
     validateAndFixGyroConfig();
     pidInit(currentPidProfile);
     accInitFilters();
-
-#ifdef USE_SERVOS
-    servosInit();
-    servoConfigureOutput();
-    if (isMixerUsingServos()) {
-        //pwm_params.useChannelForwarding = feature(FEATURE_CHANNEL_FORWARDING);
-        servoDevInit(&servoConfig()->dev);
-    }
-    servosFilterInit();
-#endif
 
 #ifdef USE_PINIO
     pinioInit(pinioConfig());

@@ -56,7 +56,6 @@
 #include "flight/failsafe.h"
 #include "flight/mixer.h"
 #include "flight/pid.h"
-#include "flight/servos.h"
 
 #include "io/beeper.h"
 #include "io/gps.h"
@@ -1019,11 +1018,6 @@ static void loadMainState(timeUs_t currentTimeUs)
 #endif
 
     blackboxCurrent->rssi = getRssi();
-
-#ifdef USE_SERVOS
-    //Tail servo for tricopters
-    blackboxCurrent->servo[5] = servo[5];
-#endif
 #else
     UNUSED(currentTimeUs);
 #endif // UNIT_TEST

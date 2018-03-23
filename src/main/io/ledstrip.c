@@ -52,7 +52,6 @@
 #include "flight/mixer.h"
 #include "flight/navigation.h"
 #include "flight/pid.h"
-#include "flight/servos.h"
 
 #include "io/beeper.h"
 #include "io/gimbal.h"

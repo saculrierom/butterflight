@@ -54,7 +54,6 @@ The next part are features enabled if your memory flash size is bigger than 64 m
 #define TELEMETRY_LTM
 #define TELEMETRY_SMARTPORT
 #define USE_RESOURCE_MGMT
-#define USE_SERVOS
 #endif
 ```
 
@@ -119,7 +118,6 @@ For example, in a NAZE32, if we're using Serial RX, with a FlySky receiver (that
 #undef TELEMETRY_HOTT
 #undef TELEMETRY_LTM
 #undef TELEMETRY_SMARTPORT
-#undef USE_SERVOS
 ```
 
 With this change, we have won space to add some missing features. With this space, we will add GPS and telemetry by iBus too, adding some *#define* that are only activated by default for flight controllers with more than 128 megabits:

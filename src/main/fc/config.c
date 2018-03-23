@@ -41,7 +41,6 @@
 #include "flight/mixer.h"
 #include "flight/navigation.h"
 #include "flight/pid.h"
-#include "flight/servos.h"
 
 #include "io/beeper.h"
 #include "io/ledstrip.h"
@@ -303,10 +302,6 @@ static void validateAndFixConfig(void)
 
 #ifndef USE_OSD
     featureClear(FEATURE_OSD);
-#endif
-
-#ifndef USE_SERVOS
-    featureClear(FEATURE_SERVO_TILT | FEATURE_CHANNEL_FORWARDING);
 #endif
 
 #ifndef USE_TRANSPONDER

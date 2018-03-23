@@ -36,10 +36,6 @@ static pwmCompleteWriteFn *pwmCompleteWrite = NULL;
 loadDmaBufferFn *loadDmaBuffer;
 #endif
 
-#ifdef USE_SERVOS
-static pwmOutputPort_t servos[MAX_SUPPORTED_SERVOS];
-#endif
-
 #ifdef BEEPER
 static pwmOutputPort_t beeperPwm;
 static uint16_t freqBeep = 0;
@@ -427,45 +423,6 @@ uint16_t prepareDshotPacket(motorDmaOutput_t *const motor, const uint16_t value)
 
     return packet;
 }
-#endif
-
-#ifdef USE_SERVOS
-void pwmWriteServo(uint8_t index, float value)
-{
-    if (index < MAX_SUPPORTED_SERVOS && servos[index].channel.ccr) {
-        *servos[index].channel.ccr = lrintf(value);
-    }
-}
-
-void servoDevInit(const servoDevConfig_t *servoConfig)
-{
-    for (uint8_t servoIndex = 0; servoIndex < MAX_SUPPORTED_SERVOS; servoIndex++) {
-        const ioTag_t tag = servoConfig->ioTags[servoIndex];
-
-        if (!tag) {
-            break;
-        }
-
-        servos[servoIndex].io = IOGetByTag(tag);
-
-        IOInit(servos[servoIndex].io, OWNER_SERVO, RESOURCE_INDEX(servoIndex));
-
-        const timerHardware_t *timer = timerGetByTag(tag, TIM_USE_ANY);
-#if defined(USE_HAL_DRIVER)
-        IOConfigGPIOAF(servos[servoIndex].io, IOCFG_AF_PP, timer->alternateFunction);
-#else
-        IOConfigGPIO(servos[servoIndex].io, IOCFG_AF_PP);
-#endif
-
-        if (timer == NULL) {
-            /* flag failure and disable ability to arm */
-            break;
-        }
-        pwmOutConfig(&servos[servoIndex].channel, timer, PWM_TIMER_1MHZ, PWM_TIMER_1MHZ / servoConfig->servoPwmRate, servoConfig->servoCenterPulse, 0);
-        servos[servoIndex].enabled = true;
-    }
-}
-
 #endif
 
 #ifdef BEEPER

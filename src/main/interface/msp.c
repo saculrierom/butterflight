@@ -72,7 +72,6 @@
 #include "flight/mixer.h"
 #include "flight/navigation.h"
 #include "flight/pid.h"
-#include "flight/servos.h"
 
 #include "interface/msp.h"
 #include "interface/msp_box.h"
@@ -801,34 +800,6 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst)
         }
         break;
 
-#ifdef USE_SERVOS
-    case MSP_SERVO:
-        sbufWriteData(dst, &servo, MAX_SUPPORTED_SERVOS * 2);
-        break;
-    case MSP_SERVO_CONFIGURATIONS:
-        for (int i = 0; i < MAX_SUPPORTED_SERVOS; i++) {
-            sbufWriteU16(dst, servoParams(i)->min);
-            sbufWriteU16(dst, servoParams(i)->max);
-            sbufWriteU16(dst, servoParams(i)->middle);
-            sbufWriteU8(dst, servoParams(i)->rate);
-            sbufWriteU8(dst, servoParams(i)->forwardFromChannel);
-            sbufWriteU32(dst, servoParams(i)->reversedSources);
-        }
-        break;
-
-    case MSP_SERVO_MIX_RULES:
-        for (int i = 0; i < MAX_SERVO_RULES; i++) {
-            sbufWriteU8(dst, customServoMixers(i)->targetChannel);
-            sbufWriteU8(dst, customServoMixers(i)->inputSource);
-            sbufWriteU8(dst, customServoMixers(i)->rate);
-            sbufWriteU8(dst, customServoMixers(i)->speed);
-            sbufWriteU8(dst, customServoMixers(i)->min);
-            sbufWriteU8(dst, customServoMixers(i)->max);
-            sbufWriteU8(dst, customServoMixers(i)->box);
-        }
-        break;
-#endif
-
     case MSP_MOTOR:
         for (unsigned i = 0; i < 8; i++) {
             if (i >= MAX_SUPPORTED_MOTORS || !pwmGetMotors()[i].enabled) {
@@ -1552,40 +1523,9 @@ static mspResult_e mspProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
         break;
 
     case MSP_SET_SERVO_CONFIGURATION:
-#ifdef USE_SERVOS
-        if (dataSize != 1 + 12) {
-            return MSP_RESULT_ERROR;
-        }
-        i = sbufReadU8(src);
-        if (i >= MAX_SUPPORTED_SERVOS) {
-            return MSP_RESULT_ERROR;
-        } else {
-            servoParamsMutable(i)->min = sbufReadU16(src);
-            servoParamsMutable(i)->max = sbufReadU16(src);
-            servoParamsMutable(i)->middle = sbufReadU16(src);
-            servoParamsMutable(i)->rate = sbufReadU8(src);
-            servoParamsMutable(i)->forwardFromChannel = sbufReadU8(src);
-            servoParamsMutable(i)->reversedSources = sbufReadU32(src);
-        }
-#endif
         break;
 
     case MSP_SET_SERVO_MIX_RULE:
-#ifdef USE_SERVOS
-        i = sbufReadU8(src);
-        if (i >= MAX_SERVO_RULES) {
-            return MSP_RESULT_ERROR;
-        } else {
-            customServoMixersMutable(i)->targetChannel = sbufReadU8(src);
-            customServoMixersMutable(i)->inputSource = sbufReadU8(src);
-            customServoMixersMutable(i)->rate = sbufReadU8(src);
-            customServoMixersMutable(i)->speed = sbufReadU8(src);
-            customServoMixersMutable(i)->min = sbufReadU8(src);
-            customServoMixersMutable(i)->max = sbufReadU8(src);
-            customServoMixersMutable(i)->box = sbufReadU8(src);
-            loadCustomServoMixer();
-        }
-#endif
         break;
 
     case MSP_SET_MOTOR_3D_CONFIG:

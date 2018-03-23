@@ -219,7 +219,6 @@ TEST_F(BasicMixerIntegrationTest, TestTricopterServo)
 
     configureMixer();
 
-    mixerInit(MIXER_TRI, customMotorMixer, customServoMixer);
 
     // and
     pwmOutputConfiguration_t pwmOutputConfiguration = {

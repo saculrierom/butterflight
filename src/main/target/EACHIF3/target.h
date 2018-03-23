@@ -95,7 +95,6 @@
 #define VBAT_SCALE_DEFAULT      40
 
 
-#undef USE_SERVOS
 #undef BEEPER
 
 
