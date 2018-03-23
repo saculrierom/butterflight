@@ -59,10 +59,6 @@ void spiInitDevice(SPIDevice device)
     IOConfigGPIOAF(IOGetByTag(spi->sck),  SPI_IO_AF_CFG, spi->af);
     IOConfigGPIOAF(IOGetByTag(spi->miso), SPI_IO_AF_CFG, spi->af);
     IOConfigGPIOAF(IOGetByTag(spi->mosi), SPI_IO_AF_CFG, spi->af);
-#elif defined(STM32F10X)
-    IOConfigGPIO(IOGetByTag(spi->sck), SPI_IO_AF_SCK_CFG);
-    IOConfigGPIO(IOGetByTag(spi->miso), SPI_IO_AF_MISO_CFG);
-    IOConfigGPIO(IOGetByTag(spi->mosi), SPI_IO_AF_MOSI_CFG);
 #else
 #error Undefined MCU architecture
 #endif
@@ -173,7 +169,7 @@ void spiSetDivisor(SPI_TypeDef *instance, uint16_t divisor)
 {
 #define BR_BITS ((BIT(5) | BIT(4) | BIT(3)))
 
-#if !(defined(STM32F1) || defined(STM32F3))
+#if defined(STM32F3)
     // SPI2 and SPI3 are on APB1/AHB1 which PCLK is half that of APB2/AHB2.
 
     if (instance == SPI2 || instance == SPI3) {

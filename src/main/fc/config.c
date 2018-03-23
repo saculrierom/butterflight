@@ -223,14 +223,6 @@ static void validateAndFixConfig(void)
 
     if (featureConfigured(FEATURE_RX_PARALLEL_PWM)) {
         featureClear(FEATURE_RX_SERIAL | FEATURE_RX_MSP | FEATURE_RX_PPM | FEATURE_RX_SPI);
-#if defined(STM32F10X)
-        // rssi adc needs the same ports
-        featureClear(FEATURE_RSSI_ADC);
-        // current meter needs the same ports
-        if (batteryConfig()->currentMeterSource == CURRENT_METER_ADC) {
-            batteryConfigMutable()->currentMeterSource = CURRENT_METER_NONE;
-        }
-#endif // STM32F10X
         // software serial needs free PWM ports
         featureClear(FEATURE_SOFTSERIAL);
     }
@@ -239,15 +231,6 @@ static void validateAndFixConfig(void)
     if (featureConfigured(FEATURE_SOFTSPI)) {
         featureClear(FEATURE_RX_PPM | FEATURE_RX_PARALLEL_PWM | FEATURE_SOFTSERIAL);
         batteryConfigMutable()->voltageMeterSource = VOLTAGE_METER_NONE;
-#if defined(STM32F10X)
-        featureClear(FEATURE_LED_STRIP);
-        // rssi adc needs the same ports
-        featureClear(FEATURE_RSSI_ADC);
-        // current meter needs the same ports
-        if (batteryConfig()->currentMeterSource == CURRENT_METER_ADC) {
-            batteryConfigMutable()->currentMeterSource = CURRENT_METER_NONE;
-        }
-#endif // STM32F10X
     }
 #endif // USE_SOFTSPI
 
@@ -348,15 +331,10 @@ void validateAndFixGyroConfig(void)
 
     if (gyroConfig()->gyro_use_32khz) {
         // F1 and F3 can't handle high sample speed.
-#if defined(STM32F1)
-        gyroConfigMutable()->gyro_sync_denom = MAX(gyroConfig()->gyro_sync_denom, 16);
-#elif defined(STM32F3)
+#if defined(STM32F3)
         gyroConfigMutable()->gyro_sync_denom = MAX(gyroConfig()->gyro_sync_denom, 4);
 #endif
     } else {
-#if defined(STM32F1)
-        gyroConfigMutable()->gyro_sync_denom = MAX(gyroConfig()->gyro_sync_denom, 3);
-#endif
     }
 
     float samplingTime;

@@ -160,9 +160,7 @@ static void gyroInitSensorFilters(gyroSensor_t *gyroSensor);
 
 #define DEBUG_GYRO_CALIBRATION 3
 
-#ifdef STM32F10X
-#define GYRO_SYNC_DENOM_DEFAULT 8
-#elif defined(USE_GYRO_SPI_MPU6000) || defined(USE_GYRO_SPI_MPU6500) || defined(USE_GYRO_SPI_ICM20601) || defined(USE_GYRO_SPI_ICM20649) \
+#if defined(USE_GYRO_SPI_MPU6000) || defined(USE_GYRO_SPI_MPU6500) || defined(USE_GYRO_SPI_ICM20601) || defined(USE_GYRO_SPI_ICM20649) \
    || defined(USE_GYRO_SPI_ICM20689)
 #define GYRO_SYNC_DENOM_DEFAULT 1
 #else

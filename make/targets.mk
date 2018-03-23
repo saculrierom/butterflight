@@ -15,18 +15,6 @@ ALTERNATES    := $(sort $(filter-out target, $(basename $(notdir $(wildcard $(RO
 $(error The target specified, $(TARGET), cannot be built. Use one of the ALT targets: $(ALTERNATES))
 endif
 
-UNSUPPORTED_TARGETS := \
-	AFROMINI \
-	ALIENFLIGHTF1 \
-	BEEBRAIN \
-	CC3D \
-	CC3D_OPBL \
-	CJMCU \
-	MICROSCISKY \
-	NAZE
-
-SUPPORTED_TARGETS := $(filter-out $(UNSUPPORTED_TARGETS), $(VALID_TARGETS))
-
 GROUP_1_TARGETS := \
 	AIORACERF3 \
 	AIR32 \
@@ -133,7 +121,7 @@ GROUP_4_TARGETS := \
 	X_RACERSPI \
 	ZCOREF3
 
-GROUP_OTHER_TARGETS := $(filter-out $(GROUP_1_TARGETS) $(GROUP_2_TARGETS) $(GROUP_3_TARGETS) $(GROUP_4_TARGETS), $(SUPPORTED_TARGETS))
+GROUP_OTHER_TARGETS := $(filter-out $(GROUP_1_TARGETS) $(GROUP_2_TARGETS) $(GROUP_3_TARGETS) $(GROUP_4_TARGETS), $(VALID_TARGETS))
 
 ifeq ($(filter $(TARGET),$(ALT_TARGETS)), $(TARGET))
 BASE_TARGET    := $(firstword $(subst /,, $(subst ./src/main/target/,, $(dir $(wildcard $(ROOT)/src/main/target/*/$(TARGET).mk)))))
@@ -164,8 +152,8 @@ ifeq ($(filter $(TARGET),$(VALID_TARGETS)),)
 $(error Target '$(TARGET)' is not valid, must be one of $(VALID_TARGETS). Have you prepared a valid target.mk?)
 endif
 
-ifeq ($(filter $(TARGET),$(F1_TARGETS) $(F3_TARGETS) $(F4_TARGETS) $(F7_TARGETS) $(SITL_TARGETS)),)
-$(error Target '$(TARGET)' has not specified a valid STM group, must be one of F1, F3, F405, F411 or F7x5. Have you prepared a valid target.mk?)
+ifeq ($(filter $(TARGET),$(F3_TARGETS) $(F4_TARGETS) $(F7_TARGETS) $(SITL_TARGETS)),)
+$(error Target '$(TARGET)' has not specified a valid STM group, must be one of F3, F405, F411 or F7x5. Have you prepared a valid target.mk?)
 endif
 
 ifeq ($(TARGET),$(filter $(TARGET),$(F3_TARGETS)))
@@ -180,9 +168,6 @@ TARGET_MCU := STM32F7
 else ifeq ($(TARGET),$(filter $(TARGET), $(SITL_TARGETS)))
 TARGET_MCU := SITL
 
-else ifeq ($(TARGET),$(filter $(TARGET), $(F1_TARGETS)))
-TARGET_MCU := STM32F1
-else
 $(error Unknown target MCU specified.)
 endif
 

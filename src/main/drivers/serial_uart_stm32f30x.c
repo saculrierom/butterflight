@@ -18,7 +18,7 @@
 /*
  * Authors:
  * jflyper - Refactoring, cleanup and made pin-configurable
- * Dominic Clifton - Port baseflight STM32F10x to STM32F30x for cleanflight
+ * Dominic Clifton - Port baseflight STM32F30x for cleanflight
  * J. Ihlein - Code from FocusFlight32
  * Bill Nesbitt - Code from AutoQuad
  * Hamasaki/Timecop - Initial baseflight code
