@@ -28,6 +28,7 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __PLATFORM_CONFIG_H
 #define __PLATFORM_CONFIG_H
+#endif
 
 /* Includes ------------------------------------------------------------------*/
 
