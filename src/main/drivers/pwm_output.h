@@ -69,18 +69,18 @@ typedef enum {
 
 typedef enum {
     PWM_TYPE_STANDARD = 0,
-    PWM_TYPE_ONESHOT125,
-    PWM_TYPE_ONESHOT42,
-    PWM_TYPE_MULTISHOT,
-    PWM_TYPE_BRUSHED,
+    PWM_TYPE_ONESHOT125 = (1 << 0),
+    PWM_TYPE_ONESHOT42 = (1 << 1),
+    PWM_TYPE_MULTISHOT = (1 << 2),
+    PWM_TYPE_BRUSHED = (1 << 3),
+    PWM_TYPE_MAX  = (1 << 4),
 #ifdef USE_DSHOT
-    PWM_TYPE_DSHOT150,
-    PWM_TYPE_DSHOT300,
-    PWM_TYPE_DSHOT600,
-    PWM_TYPE_DSHOT1200,
-    PWM_TYPE_PROSHOT1000,
+    PWM_TYPE_DSHOT150 = (1 << 12),
+    PWM_TYPE_DSHOT300 = (1 << 13),
+    PWM_TYPE_DSHOT600 = (1 << 14),
+    PWM_TYPE_DSHOT1200 = (1 << 15),
+    PWM_TYPE_PROSHOT1000 = (1 << 16),
 #endif
-    PWM_TYPE_MAX
 } motorPwmProtocolTypes_e;
 
 #define PWM_TIMER_1MHZ        MHZ_TO_HZ(1)
@@ -168,7 +168,7 @@ typedef struct {
 //CAVEAT: This is used in the `motorConfig_t` parameter group, so the parameter group constraints apply
 typedef struct motorDevConfig_s {
     uint16_t motorPwmRate;                  // The update rate of motor outputs (50-498Hz)
-    uint8_t  motorPwmProtocol;              // Pwm Protocol
+    motorPwmProtocolTypes_e  motorPwmProtocol;              // Pwm Protocol
     uint8_t  motorPwmInversion;             // Active-High vs Active-Low. Useful for brushed FCs converted for brushless operation
     uint8_t  useUnsyncedPwm;
     uint8_t  useBurstDshot;

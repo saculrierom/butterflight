@@ -183,22 +183,16 @@ void initEscEndpoints(void)
 {
     bool is3dEnabled = feature(FEATURE_3D);
     // Can't use 'isMotorProtocolDshot()' here since motors haven't been initialised yet
-    switch (motorConfig()->dev.motorPwmProtocol) {
-#ifdef USE_DSHOT
-    case PWM_TYPE_PROSHOT1000:
-    case PWM_TYPE_DSHOT1200:
-    case PWM_TYPE_DSHOT600:
-    case PWM_TYPE_DSHOT300:
-    case PWM_TYPE_DSHOT150:
+    if ((motorConfig()->dev.motorPwmProtocol >> 8) > 0) {
+        #ifdef USE_DSHOT
         disarmMotorOutput = DSHOT_DISARM_COMMAND;
         uint32_t low = is3dEnabled ? DSHOT_3D_DEADBAND_LOW : DSHOT_MAX_THROTTLE;
         deadbandMotor3dLow = DSHOT_3D_DEADBAND_LOW;
         motorOutputHigh = DSHOT_MAX_THROTTLE;
         motorOutputLow = GET_DSHOT_THROTTLE(DSHOT_MIN_THROTTLE, low, motorConfig()->digitalIdleOffsetValue);
         deadbandMotor3dHigh = GET_DSHOT_THROTTLE(DSHOT_3D_DEADBAND_HIGH, DSHOT_MAX_THROTTLE, motorConfig()->digitalIdleOffsetValue);
-        break;
-#endif
-    default:
+        #endif        
+    } else {
         motorOutputHigh = motorConfig()->maxthrottle;
         deadbandMotor3dHigh = flight3DConfig()->deadband3d_high;
         deadbandMotor3dLow = flight3DConfig()->deadband3d_low;
@@ -209,9 +203,7 @@ void initEscEndpoints(void)
             disarmMotorOutput = motorConfig()->mincommand;
             motorOutputLow = motorConfig()->minthrottle;
         }
-        break;
     }
-
     rcCommandThrottleRange = PWM_RANGE_MAX - rxConfig()->mincheck;
 
     rcCommand3dDeadBandLow = rxConfig()->midrc - flight3DConfig()->deadband3d_throttle;
@@ -329,8 +321,42 @@ static FAST_RAM float motorRangeMax;
 static FAST_RAM float motorOutputRange;
 static FAST_RAM int8_t motorOutputMixSign;
 
-static inline void calculate3d(timeUs_t currentTimeUs, float currentThrottleInputRange) {
+static inline void update3DNormal(float newThrottle, float currentThrottleInputRange, timeUs_t currentTimeUs, timeUs_t reversalTimeUs) {
     (void)currentThrottleInputRange;
+    (void)reversalTimeUs;
+    motorRangeMin = deadbandMotor3dHigh;
+    motorRangeMax = motorOutputHigh;
+    motorOutputMin = deadbandMotor3dHigh;
+    motorOutputRange = motorOutputHigh - deadbandMotor3dHigh;
+    if (motorOutputMixSign != 1) {
+        reversalTimeUs = currentTimeUs;
+    }
+    motorOutputMixSign = 1;
+    throttle = newThrottle;
+    currentThrottleInputRange = rcCommandThrottleRange3dHigh;
+}
+
+static inline void update3DInverted(float newThrottle, float currentThrottleInputRange, timeUs_t currentTimeUs, timeUs_t reversalTimeUs) {
+    (void)currentThrottleInputRange;
+    (void)reversalTimeUs;    
+    motorRangeMin = motorOutputLow;
+    motorRangeMax = deadbandMotor3dLow;
+    if (isMotorProtocolDshot()) {
+        motorOutputMin = motorOutputLow;
+        motorOutputRange = deadbandMotor3dLow - motorOutputLow;
+    } else {
+        motorOutputMin = deadbandMotor3dLow;
+        motorOutputRange = motorOutputLow - deadbandMotor3dLow;
+    }
+    if (motorOutputMixSign != -1) {
+        reversalTimeUs = currentTimeUs;
+    }
+    motorOutputMixSign = -1;
+    throttle = newThrottle;
+    currentThrottleInputRange = rcCommandThrottleRange3dLow;
+}
+
+static inline void calculate3d(timeUs_t currentTimeUs, float currentThrottleInputRange) {
     static uint16_t rcThrottlePrevious = 0;   // Store the last throttle direction for deadband transitions
     static timeUs_t reversalTimeUs = 0; // time when motors last reversed in 3D mode
     if (!ARMING_FLAG(ARMED)) {
@@ -338,66 +364,20 @@ static inline void calculate3d(timeUs_t currentTimeUs, float currentThrottleInpu
     }
     if (rcCommand[THROTTLE] <= rcCommand3dDeadBandLow) {
         // INVERTED
-        motorRangeMin = motorOutputLow;
-        motorRangeMax = deadbandMotor3dLow;
-        if (isMotorProtocolDshot()) {
-            motorOutputMin = motorOutputLow;
-            motorOutputRange = deadbandMotor3dLow - motorOutputLow;
-        } else {
-            motorOutputMin = deadbandMotor3dLow;
-            motorOutputRange = motorOutputLow - deadbandMotor3dLow;
-        }
-        if (motorOutputMixSign != -1) {
-            reversalTimeUs = currentTimeUs;
-        }
-        motorOutputMixSign = -1;
+        update3DInverted((float)rcCommand3dDeadBandLow - rcCommand[THROTTLE], currentThrottleInputRange, currentTimeUs, reversalTimeUs);
         rcThrottlePrevious = rcCommand[THROTTLE];
-        throttle = rcCommand3dDeadBandLow - rcCommand[THROTTLE];
-        currentThrottleInputRange = rcCommandThrottleRange3dLow;
     } else if (rcCommand[THROTTLE] >= rcCommand3dDeadBandHigh) {
         // NORMAL
-        motorRangeMin = deadbandMotor3dHigh;
-        motorRangeMax = motorOutputHigh;
-        motorOutputMin = deadbandMotor3dHigh;
-        motorOutputRange = motorOutputHigh - deadbandMotor3dHigh;
-        if (motorOutputMixSign != 1) {
-            reversalTimeUs = currentTimeUs;
-        }
-        motorOutputMixSign = 1;
+        update3DNormal((float)rcCommand[THROTTLE] - rcCommand3dDeadBandHigh, currentThrottleInputRange, currentTimeUs, reversalTimeUs);
         rcThrottlePrevious = rcCommand[THROTTLE];
-        throttle = rcCommand[THROTTLE] - rcCommand3dDeadBandHigh;
-        currentThrottleInputRange = rcCommandThrottleRange3dHigh;
     } else if ((rcThrottlePrevious <= rcCommand3dDeadBandLow &&
             !flight3DConfigMutable()->switched_mode3d) ||
             isMotorsReversed()) {
         // INVERTED_TO_DEADBAND
-        motorRangeMin = motorOutputLow;
-        motorRangeMax = deadbandMotor3dLow;
-        if (isMotorProtocolDshot()) {
-            motorOutputMin = motorOutputLow;
-            motorOutputRange = deadbandMotor3dLow - motorOutputLow;
-        } else {
-            motorOutputMin = deadbandMotor3dLow;
-            motorOutputRange = motorOutputLow - deadbandMotor3dLow;
-        }
-        if (motorOutputMixSign != -1) {
-            reversalTimeUs = currentTimeUs;
-        }
-        motorOutputMixSign = -1;
-        throttle = 0;
-        currentThrottleInputRange = rcCommandThrottleRange3dLow;
+        update3DInverted(0.0f, currentTimeUs, currentThrottleInputRange, reversalTimeUs);
     } else {
         // NORMAL_TO_DEADBAND
-        motorRangeMin = deadbandMotor3dHigh;
-        motorRangeMax = motorOutputHigh;
-        motorOutputMin = deadbandMotor3dHigh;
-        motorOutputRange = motorOutputHigh - deadbandMotor3dHigh;
-        if (motorOutputMixSign != 1) {
-            reversalTimeUs = currentTimeUs;
-        }
-        motorOutputMixSign = 1;
-        throttle = 0;
-        currentThrottleInputRange = rcCommandThrottleRange3dHigh;
+        update3DNormal(0.0f, currentTimeUs, currentThrottleInputRange, reversalTimeUs);
     }
     if (currentTimeUs - reversalTimeUs < 250000) {
         // keep ITerm zero for 250ms after motor reversal
@@ -543,7 +523,7 @@ void mixTable(timeUs_t currentTimeUs, uint8_t vbatPidCompensation)
     applyMixToMotors(motorMix);
 }
 
-inline uint16_t calculateDshotValue(float motorValue) {
+static inline uint16_t calculateDshotValue(float motorValue) {
     if (feature(FEATURE_3D)) {
         if (motorValue == DSHOT_DISARM_COMMAND || motorValue < DSHOT_MIN_THROTTLE) {
             return (uint16_t)PWM_RANGE_MID;
