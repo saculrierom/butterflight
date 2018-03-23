@@ -168,15 +168,9 @@ static const char* const emptryString = "";
 #ifndef USE_QUAD_MIXER_ONLY
 // sync this with mixerMode_e
 static const char * const mixerNames[] = {
-    "TRI", "QUADP", "QUADX", "BI",
-    "GIMBAL", "Y6", "HEX6",
-    "FLYING_WING", "Y4", "HEX6X", "OCTOX8", "OCTOFLATP", "OCTOFLATX",
-    "AIRPLANE", "HELI_120_CCPM", "HELI_90_DEG", "VTAIL4",
-    "HEX6H", "PPM_TO_SERVO", "DUALCOPTER", "SINGLECOPTER",
-    "ATAIL4", "CUSTOM", "CUSTOMAIRPLANE", "CUSTOMTRI", "QUADX1234", NULL
+    "QUADX", "QUADX1234", "CUSTOM"
 };
-#endif
-
+#endif //USE_QUAD_MIXER_ONLY
 // sync this with features_e
 static const char * const featureNames[] = {
     "RX_PPM", "", "INFLIGHT_ACC_CAL", "RX_SERIAL", "MOTOR_STOP",
@@ -2506,6 +2500,7 @@ static void cliDshotProg(char *cmdline)
         default:
             {
                 int command = atoi(pch);
+                //naughty: using defines when you shouldn't
                 if (command >= 0 && command < DSHOT_MIN_THROTTLE) {
                     if (firstCommand) {
                         pwmDisableMotors();

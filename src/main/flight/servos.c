@@ -232,10 +232,6 @@ void servosInit(void)
     for (uint8_t i = 0; i < MAX_SUPPORTED_SERVOS; i++) {
         servo[i] = DEFAULT_SERVO_MIDDLE;
     }
-
-    if (mixerIsTricopter()) {
-        servosTricopterInit();
-    }
 }
 
 void loadCustomServoMixer(void)

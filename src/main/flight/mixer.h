@@ -28,6 +28,7 @@
 #define QUAD_MOTOR_COUNT 4
 #define BRUSHED_MOTORS_PWM_RATE 16000
 #define BRUSHLESS_MOTORS_PWM_RATE 480
+#define CRASH_FLIP_DEADBAND 20
 
 // Digital protocol has fixed values
 #define DSHOT_DISARM_COMMAND      0
@@ -36,35 +37,57 @@
 #define DSHOT_3D_DEADBAND_LOW  1047
 #define DSHOT_3D_DEADBAND_HIGH 1048
 
+#ifndef TARGET_DEFAULT_MIXER
+#define TARGET_DEFAULT_MIXER            MIXER_QUADX
+#endif
+#ifndef TARGET_DEFAULT_MIN_THROTTLE
+#define TARGET_DEFAULT_MIN_THROTTLE     1070
+#endif
+#ifndef TARGET_DEFAULT_MAX_THROTTLE
+#define TARGET_DEFAULT_MAX_THROTTLE     2000
+#endif
+#ifndef TARGET_DEFAULT_MIN_COMMAND
+#define TARGET_DEFAULT_MIN_COMMAND      1000
+#endif
+#ifndef TARGET_DEFAULT_PWM_RATE
+#define TARGET_DEFAULT_PWM_RATE         BRUSHLESS_MOTORS_PWM_RATE
+#endif
+#ifndef TARGET_DEFAULT_PWM_PROTOCOL
+#define TARGET_DEFAULT_PWM_PROTOCOL     PWM_TYPE_ONESHOT125
+#endif
+#ifndef TARGET_DEFAULT_SYNC_PWM
+#define TARGET_DEFAULT_SYNC_PWM         true
+#endif
+#ifndef TARGET_DEFAULT_IDLE_OFFSET
+#define TARGET_DEFAULT_IDLE_OFFSET      450
+#endif
+
+#define MIXER_IDLE_OFFSET         TARGET_DEFAULT_IDLE_OFFSET
+#define MIXER_SYNC_PWM            TARGET_DEFAULT_SYNC_PWM
+#define MIXER_MIN_THROTTLE        TARGET_DEFAULT_MIN_THROTTLE
+#define MIXER_MAX_THROTTLE        TARGET_DEFAULT_MAX_THROTTLE
+#define MIXER_MIN_COMMAND         TARGET_DEFAULT_MIN_COMMAND
+#define MIXER_DISARM_COMMAND      TARGET_DEFAULT_MIN_COMMAND
+
+#if defined(BRUSHED_MOTORS) || defined(USE_BRUSHED_ESC_AUTODETECT)
+#define MIXER_MIN_THROTTLE        1000
+#define MIXER_PWM_RATE            BRUSHED_MOTORS_PWM_RATE
+#define MIXER_PWM_PROTOCOL        PWM_TYPE_BRUSHED
+#else
+#define MIXER_MIN_THROTTLE        TARGET_DEFAULT_MIN_THROTTLE
+#define MIXER_PWM_RATE            TARGET_DEFAULT_PWM_RATE
+#define MIXER_PWM_PROTOCOL        TARGET_DEFAULT_PWM_PROTOCOL
+#endif
+
+
+#define CHANNEL_FORWARDING_DISABLED (uint8_t)0xFF
+
 // Note: this is called MultiType/MULTITYPE_* in baseflight.
 typedef enum mixerMode
 {
-    MIXER_TRI = 1,
-    MIXER_QUADP = 2,
-    MIXER_QUADX = 3,
-    MIXER_BICOPTER = 4,
-    MIXER_GIMBAL = 5,
-    MIXER_Y6 = 6,
-    MIXER_HEX6 = 7,
-    MIXER_FLYING_WING = 8,
-    MIXER_Y4 = 9,
-    MIXER_HEX6X = 10,
-    MIXER_OCTOX8 = 11,
-    MIXER_OCTOFLATP = 12,
-    MIXER_OCTOFLATX = 13,
-    MIXER_AIRPLANE = 14,        // airplane / singlecopter / dualcopter (not yet properly supported)
-    MIXER_HELI_120_CCPM = 15,
-    MIXER_HELI_90_DEG = 16,
-    MIXER_VTAIL4 = 17,
-    MIXER_HEX6H = 18,
-    MIXER_PPM_TO_SERVO = 19,    // PPM -> servo relay
-    MIXER_DUALCOPTER = 20,
-    MIXER_SINGLECOPTER = 21,
-    MIXER_ATAIL4 = 22,
-    MIXER_CUSTOM = 23,
-    MIXER_CUSTOM_AIRPLANE = 24,
-    MIXER_CUSTOM_TRI = 25,
-    MIXER_QUADX_1234 = 26
+    MIXER_QUADX = 1,
+    MIXER_QUADX_1234 = 2,
+    MIXER_CUSTOM = 3,
 } mixerMode_e;
 
 // Custom mixer data per motor
@@ -101,7 +124,6 @@ typedef struct motorConfig_s {
 
 PG_DECLARE(motorConfig_t, motorConfig);
 
-#define CHANNEL_FORWARDING_DISABLED (uint8_t)0xFF
 
 extern const mixer_t mixers[];
 extern float motor[MAX_SUPPORTED_MOTORS];
@@ -128,4 +150,3 @@ void stopPwmAllMotors(void);
 
 float convertExternalToMotor(uint16_t externalValue);
 uint16_t convertMotorToExternal(float motorValue);
-bool mixerIsTricopter(void);

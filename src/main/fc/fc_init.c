@@ -719,10 +719,6 @@ void init(void)
 #ifdef USE_BLACKBOX
     blackboxInit();
 #endif
-
-    if (mixerConfig()->mixerMode == MIXER_GIMBAL) {
-        accSetCalibrationCycles(CALIBRATING_ACC_CYCLES);
-    }
     gyroStartCalibration(false);
 #ifdef USE_BARO
     baroSetCalibrationCycles(CALIBRATING_BARO_CYCLES);

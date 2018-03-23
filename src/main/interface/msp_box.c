@@ -202,10 +202,6 @@ void initActiveBoxIds(void)
 
     BME(BOXFAILSAFE);
 
-    if (mixerConfig()->mixerMode == MIXER_FLYING_WING || mixerConfig()->mixerMode == MIXER_AIRPLANE || mixerConfig()->mixerMode == MIXER_CUSTOM_AIRPLANE) {
-        BME(BOXPASSTHRU);
-    }
-
     BME(BOXBEEPERON);
 
 #ifdef USE_LED_STRIP
