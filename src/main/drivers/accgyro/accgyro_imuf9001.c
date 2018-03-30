@@ -155,6 +155,7 @@ int imuf9001Whoami(const gyroDev_t *gyro)
                 case 101:
                 case 102:
                 case 103:
+                case 104:
                     //force update
                     if( (*((__IO uint32_t *)UPT_ADDRESS)) != 0xFFFFFFFF )
                     {
@@ -163,7 +164,7 @@ int imuf9001Whoami(const gyroDev_t *gyro)
                         systemReset();
                     }
                 break;
-                case 104: //version 103 required right now
+                case 105: //version 103 required right now
                     return IMUF_9001_SPI;
                 break;
                 default:
