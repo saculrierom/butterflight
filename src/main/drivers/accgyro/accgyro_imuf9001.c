@@ -306,3 +306,8 @@ void imufStartCalibration(void)
 {
     isImufCalibrating = IMUF_CALIBRATION_STEP1; //reset by EXTI
 }
+
+void imufEndCalibration(void)
+{
+    isImufCalibrating = IMUF_NOT_CALIBRATING; //reset by EXTI
+}
