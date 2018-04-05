@@ -260,6 +260,7 @@ void imufSpiGyroInit(gyroDev_t *gyro)
 
         if (imuf9001SendReceiveCommand(gyro, IMUF_COMMAND_SETUP, &txData, &rxData))
         {
+            delay(1);
             //enable EXTI
             mpuGyroInit(gyro);
             return;
@@ -267,10 +268,15 @@ void imufSpiGyroInit(gyroDev_t *gyro)
     }
 }
 
+bool imufReadAccData(accDev_t *acc) {
+    UNUSED(acc);
+    return true;
+}
+
 bool imufSpiAccDetect(accDev_t *acc)
 {
     acc->initFn = imufSpiAccInit;
-    acc->readFn = NULL;
+    acc->readFn = imufReadAccData;
 
     return true;
 }
@@ -294,4 +300,9 @@ bool imufSpiGyroDetect(gyroDev_t *gyro)
 void imufStartCalibration(void)
 {
     isImufCalibrating = IMUF_CALIBRATION_STEP1; //reset by EXTI
+}
+
+void imufEndCalibration(void)
+{
+    isImufCalibrating = IMUF_NOT_CALIBRATING; //reset by EXTI
 }
