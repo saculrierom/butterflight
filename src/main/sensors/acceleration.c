@@ -399,7 +399,7 @@ static bool isOnFirstAccelerationCalibrationCycle(void)
     return calibratingA == CALIBRATING_ACC_CYCLES;
 }
 
-static void performAccelerationCalibration(rollAndPitchTrims_t *rollAndPitchTrims)
+static void performAcclerationCalibration(rollAndPitchTrims_t *rollAndPitchTrims)
 {
     static int32_t a[3];
 
@@ -419,7 +419,6 @@ static void performAccelerationCalibration(rollAndPitchTrims_t *rollAndPitchTrim
     }
 
     if (isOnFinalAccelerationCalibrationCycle()) {
-
         // Calculate average, shift Z down by acc_1G and store values in EEPROM at end of calibration
         accelerationTrims->raw[X] = a[X] / CALIBRATING_ACC_CYCLES;
         accelerationTrims->raw[Y] = a[Y] / CALIBRATING_ACC_CYCLES;
@@ -522,7 +521,7 @@ void accUpdate(timeUs_t currentTimeUs, rollAndPitchTrims_t *rollAndPitchTrims)
     #endif
 
     if (!accIsCalibrationComplete()) {
-        performAccelerationCalibration(rollAndPitchTrims);
+        performAcclerationCalibration(rollAndPitchTrims);
     }
 
     if (feature(FEATURE_INFLIGHT_ACC_CAL)) {
