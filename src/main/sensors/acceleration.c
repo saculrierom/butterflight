@@ -70,6 +70,9 @@
 #include "hardware_revision.h"
 #endif
 
+#ifndef DEFAULT_ACC_SAMPLE_INTERVAL
+#define DEFAULT_ACC_SAMPLE_INTERVAL 1000
+#endif //DEFAULT_ACC_SAMPLE_INTERVAL 1000
 
 FAST_RAM acc_t acc;                       // acc access functions
 
@@ -340,7 +343,7 @@ retry:
     return true;
 }
 
-bool accInit(uint32_t gyroSamplingInverval)
+bool accInit(void)
 {
     memset(&acc, 0, sizeof(acc));
     // copy over the common gyro mpu settings
@@ -353,29 +356,18 @@ bool accInit(uint32_t gyroSamplingInverval)
     acc.dev.acc_1G = 256; // set default
     acc.dev.initFn(&acc.dev); // driver initialisation
     // set the acc sampling interval according to the gyro sampling interval
-    switch (gyroSamplingInverval) {  // Switch statement kept in place to change acc sampling interval in the future
-    case 500:
-    case 375:
-    case 250:
-    case 125:
-        acc.accSamplingInterval = 1000;
-        break;
-    case 1000:
-    default:
-#ifdef STM32F10X
-        acc.accSamplingInterval = 1000;
-#else
-        acc.accSamplingInterval = 1000;
-#endif
-    }
+    acc.accSamplingInterval = DEFAULT_ACC_SAMPLE_INTERVAL;
     if (accLpfCutHz) {
         for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
             biquadFilterInitLPF(&accFilter[axis], accLpfCutHz, acc.accSamplingInterval);
         }
     }
-    if (accelerometerConfig()->acc_align != ALIGN_DEFAULT) {
+    #ifndef USE_GYRO_IMUF9001
+    if (accelerometerConfig()->acc_align != CW0_DEG) {
         acc.dev.accAlign = accelerometerConfig()->acc_align;
     }
+    #endif //USE_GYRO_IMUF9001
+    
     return true;
 }
 

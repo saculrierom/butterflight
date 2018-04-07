@@ -456,29 +456,21 @@ static bool gyroInitSensor(gyroSensor_t *gyroSensor)
         return false;
     }
 
-    switch (gyroHardware) {
-    case GYRO_MPU6500:
-    case GYRO_MPU9250:
-    case GYRO_ICM20601:
-    case GYRO_ICM20602:
-    case GYRO_ICM20608G:
-    case GYRO_ICM20689:
-    case GYRO_IMUF9001:
-        // do nothing, as gyro supports 32kHz
-        break;
-    default:
-        // gyro does not support 32kHz
+    if (gyroHardware < 32) { //enum for ones that use 32K are numbered higher than 32.
         gyroConfigMutable()->gyro_use_32khz = false;
-        break;
     }
 
     // Must set gyro targetLooptime before gyroDev.init and initialisation of filters
     gyro.targetLooptime = gyroSetSampleRate(&gyroSensor->gyroDev, gyroConfig()->gyro_lpf, gyroConfig()->gyro_sync_denom, gyroConfig()->gyro_use_32khz);
     gyroSensor->gyroDev.lpf = gyroConfig()->gyro_lpf;
     gyroSensor->gyroDev.initFn(&gyroSensor->gyroDev);
+    
+    
+    #ifndef USE_GYRO_IMUF9001
     if (gyroConfig()->gyro_align != ALIGN_DEFAULT) {
         gyroSensor->gyroDev.gyroAlign = gyroConfig()->gyro_align;
     }
+    #endif ///*define*/
 
     gyroInitSensorFilters(gyroSensor);
 #ifdef USE_GYRO_DATA_ANALYSE
@@ -730,13 +722,13 @@ bool gyroIsSane(void)
 
 uint16_t returnGyroAlignmentForImuf9001(void)
 {
-    if(gyroConfig()->gyro_align == 0)
+    if(gyroConfig()->gyro_align <= 1)
     {
         return 0;
     }
     else
     {
-        return (uint16_t)(gyroConfig()->gyro_align-1);
+        return (uint16_t)(gyroConfig()->gyro_align - 1);
     }
 }
 
