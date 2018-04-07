@@ -47,6 +47,9 @@
 #include "sensors/compass.h"
 #include "sensors/gyro.h"
 #include "sensors/sensors.h"
+#ifdef USE_ACC_IMUF9001
+#include "drivers/accgyro/accgyro_imuf9001.h"
+#endif
 
 #if defined(SIMULATOR_BUILD) && defined(SIMULATOR_MULTITHREAD)
 #include <stdio.h>
@@ -185,6 +188,7 @@ static void imuCalculateAcceleration(timeDelta_t deltaT)
 }
 #endif // USE_ALT_HOLD
 
+#ifndef USE_ACC_IMUF9001
 static float imuUseFastGains(void) {
    if (!ARMING_FLAG(ARMED)) {
         return (17.0f);
@@ -313,6 +317,7 @@ static void imuMahonyAHRSupdate(float dt, quaternion *vGyro, bool useAcc, quater
     //DEBUG_SET(DEBUG_IMU, DEBUG_IMU_FREE, lrintf(quaternionModulus(&qAttitude) * 1000));
     DEBUG_SET(DEBUG_IMU, DEBUG_IMU_FREE, lrintf(vGyroStdDevModulus * 1000));
 }
+#endif
 
 STATIC_UNIT_TESTED void imuUpdateEulerAngles(void) {
     quaternionProducts buffer;
@@ -338,7 +343,7 @@ STATIC_UNIT_TESTED void imuUpdateEulerAngles(void) {
         DISABLE_STATE(SMALL_ANGLE);
     }
 }
-
+#ifndef USE_ACC_IMUF9001
 static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
 {
     static timeUs_t previousIMUUpdateTime;
@@ -411,9 +416,10 @@ static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
     imuCalculateAcceleration(deltaT); // rotate acc vector into earth frame
 #endif
 }
-
+#endif
 void imuUpdateAttitude(timeUs_t currentTimeUs)
 {
+#ifndef USE_ACC_IMUF9001
     if (sensors(SENSOR_ACC) && acc.isAccelUpdatedAtLeastOnce) {
         IMU_LOCK;
 #if defined(SIMULATOR_BUILD) && defined(SIMULATOR_IMU_SYNC)
@@ -430,6 +436,14 @@ void imuUpdateAttitude(timeUs_t currentTimeUs)
         acc.accADC[Y] = 0;
         acc.accADC[Z] = 0;
     }
+#else 
+        UNUSED(currentTimeUs);
+        qAttitude.w = imufQuat.w;
+        qAttitude.x = imufQuat.x;
+        qAttitude.y = imufQuat.y;
+        qAttitude.z = imufQuat.z;
+        imuUpdateEulerAngles();
+#endif
 }
 
 float getCosTiltAngle(void) {

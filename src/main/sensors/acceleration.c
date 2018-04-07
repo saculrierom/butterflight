@@ -281,6 +281,7 @@ retry:
     case ACC_IMUF9001:
         if (imufSpiAccDetect(dev)) {
             accHardware = ACC_ICM20689;
+            dev->accAlign = ACC_IMUF9001_ALIGN;
             break;
         }
         FALLTHROUGH;
@@ -362,11 +363,11 @@ bool accInit(void)
             biquadFilterInitLPF(&accFilter[axis], accLpfCutHz, acc.accSamplingInterval);
         }
     }
-    #ifndef USE_GYRO_IMUF9001
+    // #ifndef USE_GYRO_IMUF9001
     if (accelerometerConfig()->acc_align != CW0_DEG) {
         acc.dev.accAlign = accelerometerConfig()->acc_align;
     }
-    #endif //USE_GYRO_IMUF9001
+    // #endif //USE_GYRO_IMUF9001
     
     return true;
 }
@@ -504,13 +505,13 @@ void accUpdate(timeUs_t currentTimeUs, rollAndPitchTrims_t *rollAndPitchTrims)
 
     if (accLpfCutHz) {
         for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-            acc.accADC[axis] = lrintf(biquadFilterApply(&accFilter[axis], (float)acc.accADC[axis]));
+            acc.accADC[axis] = biquadFilterApply(&accFilter[axis], (float)acc.accADC[axis]);
         }
     }
 
-    #ifndef USE_GYRO_IMUF9001
+    // #ifndef USE_GYRO_IMUF9001
     alignSensors(acc.accADC, acc.dev.accAlign);
-    #endif
+    // #endif
 
     if (!accIsCalibrationComplete()) {
         performAccelerationCalibration(rollAndPitchTrims);

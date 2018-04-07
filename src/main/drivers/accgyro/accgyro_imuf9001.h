@@ -49,7 +49,9 @@ void imufEndCalibration(void);
 #define IMUF_DEFAULT_YAW_W  10
 #endif
 
-volatile uint32_t isImufCalibrating;
+
+#define ACC_IMUF9001_ALIGN 1 //CW0_DEG
+
 
 typedef struct imufVersion
 {   
@@ -191,5 +193,9 @@ typedef enum imufCalibrationSteps
     IMUF_DONE_CALIBRATING   = 2
 
 } imufCalibrationSteps_t;
+
+extern volatile imuFrame_t imufQuat;
+volatile uint32_t isImufCalibrating;
+
 
 extern uint32_t getCrcImuf9001(uint32_t* data, uint32_t size);

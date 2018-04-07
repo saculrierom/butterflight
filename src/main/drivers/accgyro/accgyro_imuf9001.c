@@ -45,6 +45,7 @@
 
 static const uint16_t imufCurrentVersion = 105;
 volatile uint32_t isImufCalibrating = 0;
+volatile imuFrame_t imufQuat;
 
 void crcConfig(void)
 {

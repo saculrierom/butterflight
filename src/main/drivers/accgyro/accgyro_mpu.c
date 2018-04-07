@@ -240,6 +240,10 @@ void mpuGyroDmaSpiReadFinish(gyroDev_t * gyro)
         gyro->gyroADC[X] = imufData.gyroX;
         gyro->gyroADC[Y] = imufData.gyroY;
         gyro->gyroADC[Z] = imufData.gyroZ;
+        imufQuat.w       = imufData.quaternionW;
+        imufQuat.x       = imufData.quaternionX;
+        imufQuat.y       = imufData.quaternionY;
+        imufQuat.z       = imufData.quaternionZ;
     }
     else
     {

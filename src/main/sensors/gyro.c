@@ -911,16 +911,11 @@ static FAST_CODE void gyroUpdateSensor(gyroSensor_t *gyroSensor, timeUs_t curren
     accumulatedMeasurementTimeUs += sampleDeltaUs;
     for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
         // NOTE: this branch optimized for when there is no gyro debugging, ensure it is kept in step with non-optimized branch
-        float gyroADCf = gyroSensor->gyroDev.gyroADC[axis] * gyroSensor->gyroDev.scale;
-#ifdef USE_GYRO_DATA_ANALYSE
-            gyroADCf = gyroSensor->notchFilterDynApplyFn((filter_t *)&gyroSensor->notchFilterDyn[axis], gyroADCf);
-#endif
-        gyro.gyroADCf[axis] = gyroADCf;
-
+        gyro.gyroADCf[axis] = gyroSensor->gyroDev.gyroADC[axis];
         if (!gyroSensor->overflowDetected) {
             // integrate using trapezium rule to avoid bias
-            accumulatedMeasurements[axis] += 0.5f * (gyroPrevious[axis] + gyroADCf) * sampleDeltaUs;
-            gyroPrevious[axis] = gyroADCf;
+            accumulatedMeasurements[axis] += 0.5f * (gyroPrevious[axis] + gyro.gyroADCf[axis]) * sampleDeltaUs;
+            gyroPrevious[axis] = gyro.gyroADCf[axis];
         }
     }
     if (!isGyroSensorCalibrationComplete(gyroSensor)) {
