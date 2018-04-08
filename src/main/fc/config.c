@@ -57,6 +57,10 @@
 #include "sensors/battery.h"
 #include "sensors/gyro.h"
 
+#ifdef USE_GYRO_IMUF9001
+#include "drivers/accgyro/accgyro_imuf9001.h"
+#endif
+
 #ifndef USE_OSD_SLAVE
 pidProfile_t *currentPidProfile;
 #endif
@@ -344,8 +348,8 @@ void validateAndFixGyroConfig(void)
       || motorConfigMutable()->dev.motorPwmProtocol == PWM_TYPE_DSHOT600
       || motorConfigMutable()->dev.motorPwmProtocol == PWM_TYPE_PROSHOT1000))
     {
-        pidConfigMutable()->pid_process_denom == 2;
-        gyroConfigMutable()->gyro_sync_denom == 2;
+        pidConfigMutable()->pid_process_denom = 2;
+        gyroConfigMutable()->gyro_sync_denom = 2;
     }
     if (gyroConfigMutable()->gyro_sync_denom > 1) {
        gyroConfigMutable()->imuf_mode = GTBCM_GYRO_ACC_QUAT_FILTER_F; 
