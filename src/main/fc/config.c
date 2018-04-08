@@ -340,13 +340,17 @@ static void validateAndFixConfig(void)
 void validateAndFixGyroConfig(void)
 {
     #ifdef USE_GYRO_IMUF9001
-    if ((motorConfigMutable()->dev.motorPwmProtocol == PWM_TYPE_DSHOT1200 
-      || motorConfigMutable()->dev.motorPwmProtocol == PWM_TYPE_DSHOT600)
-      && (pidConfigMutable()->pid_process_denom == 1 && gyroConfigMutable()->gyro_sync_denom == 1)
-      && rxConfigMutable()->rcInterpolation != RC_SMOOTHING_OFF
-      && systemConfigMutable()->cpu_overclock != 2) 
+    if (gyroConfigMutable()->gyro_sync_denom == 1 && (motorConfigMutable()->dev.motorPwmProtocol == PWM_TYPE_DSHOT1200 
+      || motorConfigMutable()->dev.motorPwmProtocol == PWM_TYPE_DSHOT600
+      || motorConfigMutable()->dev.motorPwmProtocol == PWM_TYPE_PROSHOT1000))
     {
-        systemConfigMutable()->cpu_overclock = 2; //216MHZ is required for dshot + rc_interpolation + 32K pid loop.
+        pidConfigMutable()->pid_process_denom == 2;
+        gyroConfigMutable()->gyro_sync_denom == 2;
+    }
+    if (gyroConfigMutable()->gyro_sync_denom > 1) {
+       gyroConfigMutable()->imuf_mode = GTBCM_GYRO_ACC_QUAT_FILTER_F; 
+    } else {
+       gyroConfigMutable()->imuf_mode = GTBCM_GYRO_ACC_FILTER_F;
     }
     gyroConfigMutable()->imuf_rate = constrain(gyroConfigMutable()->gyro_sync_denom - 1, 0, 5);
     #endif
