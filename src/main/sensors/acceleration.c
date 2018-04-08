@@ -51,9 +51,9 @@
 #include "drivers/accgyro/accgyro_spi_mpu6000.h"
 #include "drivers/accgyro/accgyro_spi_mpu6500.h"
 #include "drivers/accgyro/accgyro_spi_mpu9250.h"
-#ifdef USE_GYRO_IMUF9001
+#ifdef USE_ACC_IMUF9001
 #include "drivers/accgyro/accgyro_imuf9001.h"
-#endif //USE_GYRO_IMUF9001
+#endif //USE_ACC_IMUF9001
 #include "drivers/bus_spi.h"
 
 #include "fc/config.h"
@@ -363,11 +363,11 @@ bool accInit(void)
             biquadFilterInitLPF(&accFilter[axis], accLpfCutHz, acc.accSamplingInterval);
         }
     }
-    // #ifndef USE_GYRO_IMUF9001
+    #ifndef USE_ACC_IMUF9001
     if (accelerometerConfig()->acc_align != CW0_DEG) {
         acc.dev.accAlign = accelerometerConfig()->acc_align;
     }
-    // #endif //USE_GYRO_IMUF9001
+    #endif //USE_ACC_IMUF9001
     
     return true;
 }
@@ -509,9 +509,9 @@ void accUpdate(timeUs_t currentTimeUs, rollAndPitchTrims_t *rollAndPitchTrims)
         }
     }
 
-    // #ifndef USE_GYRO_IMUF9001
+    #ifndef USE_ACC_IMUF9001
     alignSensors(acc.accADC, acc.dev.accAlign);
-    // #endif
+    #endif
 
     if (!accIsCalibrationComplete()) {
         performAccelerationCalibration(rollAndPitchTrims);
