@@ -77,6 +77,7 @@ int32_t accSum[XYZ_AXIS_COUNT];
 uint32_t accTimeSum = 0;        // keep track for integration of acc
 int accSumCount = 0;
 float accVelScale;
+bool calculateQuats = true;
 
 static float throttleAngleScale;
 static float fc_acc;
@@ -138,6 +139,10 @@ void imuInit(void)
         printf("Create imuUpdateLock error!\n");
     }
 #endif
+
+#ifdef USE_ACC_IMUF9001
+    calculateQuats = gyroConfig()->imuf_mode != GTBCM_GYRO_ACC_QUAT_FILTER_F;
+#endif
 }
 
 void imuResetAccelerationSum(void)
@@ -188,7 +193,6 @@ static void imuCalculateAcceleration(timeDelta_t deltaT)
 }
 #endif // USE_ALT_HOLD
 
-#ifndef USE_ACC_IMUF9001
 static float imuUseFastGains(void) {
    if (!ARMING_FLAG(ARMED)) {
         return (17.0f);
@@ -317,7 +321,6 @@ static void imuMahonyAHRSupdate(float dt, quaternion *vGyro, bool useAcc, quater
     //DEBUG_SET(DEBUG_IMU, DEBUG_IMU_FREE, lrintf(quaternionModulus(&qAttitude) * 1000));
     DEBUG_SET(DEBUG_IMU, DEBUG_IMU_FREE, lrintf(vGyroStdDevModulus * 1000));
 }
-#endif
 
 STATIC_UNIT_TESTED void imuUpdateEulerAngles(void) {
     quaternionProducts buffer;
@@ -343,7 +346,6 @@ STATIC_UNIT_TESTED void imuUpdateEulerAngles(void) {
         DISABLE_STATE(SMALL_ANGLE);
     }
 }
-#ifndef USE_ACC_IMUF9001
 static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
 {
     static timeUs_t previousIMUUpdateTime;
@@ -416,10 +418,19 @@ static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
     imuCalculateAcceleration(deltaT); // rotate acc vector into earth frame
 #endif
 }
-#endif
+
 void imuUpdateAttitude(timeUs_t currentTimeUs)
 {
-#ifndef USE_ACC_IMUF9001
+#ifdef USE_ACC_IMUF9001
+    if (!calculateQuats) {
+        qAttitude.w = imufQuat.w;
+        qAttitude.x = imufQuat.x;
+        qAttitude.y = imufQuat.y;
+        qAttitude.z = imufQuat.z;
+        imuUpdateEulerAngles();
+    } 
+    else 
+#endif //USE_ACC_IMUF9001
     if (sensors(SENSOR_ACC) && acc.isAccelUpdatedAtLeastOnce) {
         IMU_LOCK;
 #if defined(SIMULATOR_BUILD) && defined(SIMULATOR_IMU_SYNC)
@@ -436,14 +447,6 @@ void imuUpdateAttitude(timeUs_t currentTimeUs)
         acc.accADC[Y] = 0;
         acc.accADC[Z] = 0;
     }
-#else 
-        UNUSED(currentTimeUs);
-        qAttitude.w = imufQuat.w;
-        qAttitude.x = imufQuat.x;
-        qAttitude.y = imufQuat.y;
-        qAttitude.z = imufQuat.z;
-        imuUpdateEulerAngles();
-#endif
 }
 
 float getCosTiltAngle(void) {

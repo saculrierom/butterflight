@@ -344,18 +344,23 @@ static void validateAndFixConfig(void)
 void validateAndFixGyroConfig(void)
 {
     #ifdef USE_GYRO_IMUF9001
-    if (gyroConfigMutable()->gyro_sync_denom == 1 && (motorConfigMutable()->dev.motorPwmProtocol == PWM_TYPE_DSHOT1200 
+    if (pidConfigMutable()->pid_process_denom == 1 && (motorConfigMutable()->dev.motorPwmProtocol == PWM_TYPE_DSHOT1200 
       || motorConfigMutable()->dev.motorPwmProtocol == PWM_TYPE_DSHOT600
       || motorConfigMutable()->dev.motorPwmProtocol == PWM_TYPE_PROSHOT1000))
     {
+        //digital protocols drop packets at 32k accorgins to blheli_32 team.
         pidConfigMutable()->pid_process_denom = 2;
-        gyroConfigMutable()->gyro_sync_denom = 2;
     }
+    //keep the gyro and pid loop the same always.
+    gyroConfigMutable()->gyro_sync_denom = pidConfigMutable()->pid_process_denom;
+    //if gyro is < 32k, use quaternion output.
     if (gyroConfigMutable()->gyro_sync_denom > 1) {
        gyroConfigMutable()->imuf_mode = GTBCM_GYRO_ACC_QUAT_FILTER_F; 
     } else {
+    //don't use quats at 32k. use gyro + ACC
        gyroConfigMutable()->imuf_mode = GTBCM_GYRO_ACC_FILTER_F;
     }
+    //keeop imuf_rate in sync with the gyro.
     gyroConfigMutable()->imuf_rate = constrain(gyroConfigMutable()->gyro_sync_denom - 1, 0, 5);
     #endif
     // Prevent invalid notch cutoff
