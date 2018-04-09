@@ -40,17 +40,29 @@
 #define USE_ACC
 #define USE_ACC_SPI_MPU6000
 #define USE_ACC_SPI_MPU6500
+#define USE_ACC_MPU6000
+#define USE_ACC_MPU6500
 
 #define USE_GYRO
 #define USE_GYRO_SPI_MPU6000
 #define USE_GYRO_SPI_MPU6500
+#define USE_GYRO_MPU6000
+#define USE_GYRO_MPU6500
 
 #define USE_DUAL_GYRO
 
-#define GYRO_1_CS_PIN           PD2
-#define GYRO_1_SPI_INSTANCE     SPI3
-#define GYRO_2_CS_PIN           PA4
-#define GYRO_2_SPI_INSTANCE     SPI1
+// TODO - Cleanup after testing
+//#define GYRO_1_CS_PIN           PD2
+//#define GYRO_1_SPI_INSTANCE     SPI3
+//#define GYRO_2_CS_PIN           PA4
+//#define GYRO_2_SPI_INSTANCE     SPI1
+
+#define MPU6000_CS_PIN          SPI3_NSS_PIN
+#define MPU6000_SPI_INSTANCE    SPI3
+#define MPU6500_CS_PIN          SPI1_NSS_PIN
+#define MPU6500_SPI_INSTANCE    SPI1
+#define GYRO_0_CS_PIN           MPU6000_CS_PIN
+#define GYRO_1_CS_PIN           MPU6500_CS_PIN
 
 #define GYRO_1_ALIGN            CW180_DEG
 #define ACC_1_ALIGN             CW180_DEG
@@ -122,6 +134,7 @@
 
 #define USE_SPI
 #define USE_SPI_DEVICE_1
+#define SPI1_NSS_PIN            PA4
 #define SPI1_SCK_PIN            PA5
 #define SPI1_MISO_PIN           PA6
 #define SPI1_MOSI_PIN           PA7
