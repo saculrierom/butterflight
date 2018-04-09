@@ -722,13 +722,20 @@ bool gyroIsSane(void)
 
 uint16_t returnGyroAlignmentForImuf9001(void)
 {
-    if(gyroConfig()->gyro_align <= 1)
+    if (isBoardAlignmentStandard(boardAlignment())) 
     {
-        return 0;
+        if(gyroConfig()->gyro_align <= 1)
+        {
+            return 0;
+        }
+        else
+        {
+            return (uint16_t)(gyroConfig()->gyro_align - 1);
+        }
     }
-    else
+    else 
     {
-        return (uint16_t)(gyroConfig()->gyro_align - 1);
+        return (uint16_t)IMU_CUSTOM;
     }
 }
 

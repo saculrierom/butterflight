@@ -240,10 +240,12 @@ void mpuGyroDmaSpiReadFinish(gyroDev_t * gyro)
         gyro->gyroADC[X] = imufData.gyroX;
         gyro->gyroADC[Y] = imufData.gyroY;
         gyro->gyroADC[Z] = imufData.gyroZ;
-        imufQuat.w       = imufData.quaternionW;
-        imufQuat.x       = imufData.quaternionX;
-        imufQuat.y       = imufData.quaternionY;
-        imufQuat.z       = imufData.quaternionZ;
+        if (gyroConfig()->imuf_mode == GTBCM_GYRO_ACC_QUAT_FILTER_F) {
+            imufQuat.w       = imufData.quaternionW;
+            imufQuat.x       = imufData.quaternionX;
+            imufQuat.y       = imufData.quaternionY;
+            imufQuat.z       = imufData.quaternionZ;
+        }
     }
     else
     {

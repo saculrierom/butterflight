@@ -77,7 +77,9 @@ int32_t accSum[XYZ_AXIS_COUNT];
 uint32_t accTimeSum = 0;        // keep track for integration of acc
 int accSumCount = 0;
 float accVelScale;
-bool calculateQuats = true;
+#ifdef USE_ACC_IMUF9001
+volatile bool calculateQuats = true;
+#endif
 
 static float throttleAngleScale;
 static float fc_acc;
