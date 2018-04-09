@@ -28,7 +28,7 @@
 #if defined(SIMULATOR_BUILD) && defined(SIMULATOR_MULTITHREAD)
 #include <pthread.h>
 #elif !defined(UNIT_TEST)
-// #pragma GCC diagnostic warning "-Wpadded"
+#pragma GCC diagnostic warning "-Wpadded"
 #endif
 
 #ifndef MPU_I2C_INSTANCE
@@ -79,7 +79,7 @@ typedef struct gyroDev_s {
     uint8_t mpuDividerDrops;
     ioTag_t mpuIntExtiTag;
     uint8_t filler[3];
-} gyroDev_t;
+} __attribute__((__packed__)) gyroDev_t;
 
 typedef struct accDev_s {
 #if defined(SIMULATOR_BUILD) && defined(SIMULATOR_MULTITHREAD)
