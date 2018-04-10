@@ -326,7 +326,7 @@ static void imuMahonyAHRSupdate(float dt, quaternion *vGyro, bool useAcc, quater
 
 STATIC_UNIT_TESTED void imuUpdateEulerAngles(void) {
     quaternionProducts buffer;
-
+    
     if (FLIGHT_MODE(HEADFREE_MODE)) {
         quaternionMultiply(&qOffset, &qAttitude, &qHeadfree);
         quaternionComputeProducts(&qHeadfree, &buffer);
@@ -425,11 +425,13 @@ void imuUpdateAttitude(timeUs_t currentTimeUs)
 {
 #ifdef USE_ACC_IMUF9001
     if (!calculateQuats) {
+        IMU_LOCK;
         qAttitude.w = imufQuat.w;
         qAttitude.x = imufQuat.x;
         qAttitude.y = imufQuat.y;
         qAttitude.z = imufQuat.z;
-        imuUpdateEulerAngles();
+        imuCalculateEstimatedAttitude(currentTimeUs);
+        IMU_UNLOCK;
     } 
     else 
 #endif //USE_ACC_IMUF9001

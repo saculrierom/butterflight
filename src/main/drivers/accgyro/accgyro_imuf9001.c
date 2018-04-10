@@ -43,7 +43,7 @@
 #include "drivers/system.h"
 
 
-static const uint16_t imufCurrentVersion = 106;
+volatile uint16_t imufCurrentVersion = IMUF_FIRMWARE_VERSION;
 volatile uint32_t isImufCalibrating = 0;
 volatile imuFrame_t imufQuat;
 
@@ -153,7 +153,8 @@ int imuf9001Whoami(const gyroDev_t *gyro)
     {
         if (imuf9001SendReceiveCommand(gyro, IMUF_COMMAND_REPORT_INFO, &reply, NULL))
         {
-            if ((*(imufVersion_t *)&(reply.param1)).firmware < imufCurrentVersion) {
+            imufCurrentVersion = (*(imufVersion_t *)&(reply.param1)).firmware;
+            if (imufCurrentVersion < IMUF_FIRMWARE_VERSION) {
                 //force update
                 if( (*((__IO uint32_t *)UPT_ADDRESS)) != 0xFFFFFFFF )
                 {

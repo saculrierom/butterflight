@@ -51,8 +51,8 @@ void imufEndCalibration(void);
 
 
 #define ACC_IMUF9001_ALIGN 1 //CW0_DEG
-
-
+#define IMUF_FIRMWARE_VERSION  106
+extern volatile uint16_t imufCurrentVersion;
 typedef struct imufVersion
 {   
     uint32_t hardware;
