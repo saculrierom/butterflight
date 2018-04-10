@@ -43,7 +43,7 @@
 #include "drivers/system.h"
 
 
-static const uint16_t imufCurrentVersion = 105;
+static const uint16_t imufCurrentVersion = 106;
 volatile uint32_t isImufCalibrating = 0;
 volatile imuFrame_t imufQuat;
 
@@ -250,6 +250,8 @@ void imufSpiGyroInit(gyroDev_t *gyro)
     rxData.param7 = ( (uint16_t)gyroConfig()->imuf_yaw_lpf_cutoff_hz << 16) | (uint16_t)0;
     rxData.param8 = ( (int16_t)boardAlignment()->rollDegrees << 16 ) | returnGyroAlignmentForImuf9001();
     rxData.param9 = ( (int16_t)boardAlignment()->yawDegrees << 16 ) | (int16_t)boardAlignment()->pitchDegrees;
+    //rxData.param8 = ( (int16_t)180 << 16 ) | 0;
+    //rxData.param9 = ( (int16_t)0 << 16 ) | 0;
 
     for (attempt = 0; attempt < 3; attempt++)
     {

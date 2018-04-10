@@ -348,9 +348,9 @@ void validateAndFixGyroConfig(void)
         gyroConfigMutable()->gyro_sync_denom == 2;
     }
     if (gyroConfigMutable()->gyro_sync_denom > 1) {
-       gyroConfigMutable()->imuf_mode = GTBCM_GYRO_ACC_QUAT_FILTER_F; 
+       gyroConfigMutable()->imuf_mode = 48; 
     } else {
-       gyroConfigMutable()->imuf_mode = GTBCM_GYRO_ACC_FILTER_F;
+       gyroConfigMutable()->imuf_mode = 48;
     }
     gyroConfigMutable()->imuf_rate = constrain(gyroConfigMutable()->gyro_sync_denom - 1, 0, 5);
     #endif
