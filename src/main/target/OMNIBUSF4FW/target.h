@@ -29,7 +29,7 @@
 #endif
 
 #if defined(OMNIBUSF4FW)
-#define LED0_PIN                PA8
+#define LED0_PIN                PB6
 #elif defined(OMNIBUSF4FW1)
 #define LED0_PIN                PB5
 #endif
@@ -64,10 +64,10 @@
 #define GYRO_0_CS_PIN           MPU6000_CS_PIN
 #define GYRO_1_CS_PIN           MPU6500_CS_PIN
 
-#define GYRO_1_ALIGN            CW180_DEG
-#define ACC_1_ALIGN             CW180_DEG
-#define GYRO_2_ALIGN            CW0_DEG_FLIP
-#define ACC_2_ALIGN             CW0_DEG_FLIP
+#define GYRO_MPU6000_ALIGN            CW180_DEG
+#define ACC_MPU6000_ALIGN             CW180_DEG
+#define GYRO_MPU6500_ALIGN            CW0_DEG_FLIP
+#define ACC_MPU6500_ALIGN             CW0_DEG_FLIP
 
 #define GYRO_CONFIG_USE_GYRO_DEFAULT GYRO_CONFIG_USE_GYRO_1
 
