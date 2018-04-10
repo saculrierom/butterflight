@@ -183,7 +183,7 @@ typedef enum gyroToBoardCommMode
     GTBCM_GYRO_ONLY_FILTER_F     = 20, //gyro filtered, 3*4 bytes, 4 bytes crc
     GTBCM_GYRO_ACC_FILTER_F      = 32, //gyro filtered, acc filtered, temp, crc
     GTBCM_GYRO_ACC_QUAT_FILTER_F = 48, //gyro filtered, acc filtered, temp, quaternions filtered, crc
-    GTBCM_DEFAULT                = GTBCM_GYRO_ACC_QUAT_FILTER_F, //default mode
+    GTBCM_DEFAULT                = GTBCM_GYRO_ACC_FILTER_F, //default mode
 } gyroToBoardCommMode_t;
 
 typedef enum imufCalibrationSteps
