@@ -280,7 +280,7 @@ retry:
 #ifdef USE_ACC_IMUF9001
     case ACC_IMUF9001:
         if (imufSpiAccDetect(dev)) {
-            accHardware = ACC_ICM20689;
+            accHardware = ACC_IMUF9001;
             dev->accAlign = ACC_IMUF9001_ALIGN;
             break;
         }

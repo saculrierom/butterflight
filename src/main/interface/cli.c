@@ -3027,7 +3027,7 @@ static void cliStatus(char *cmdline)
     cliPrintf(", Vref=%d.%2dV, Core temp=%ddegC", vrefintMv / 1000, (vrefintMv % 1000) / 10, coretemp);
 #endif
 
-#if defined(USE_SENSOR_NAMES)
+#if defined(USE_SENSOR_NAMES) && !defined(USE_GYRO_IMUF9001)
     const uint32_t detectedSensorsMask = sensorsMask();
     for (uint32_t i = 0; ; i++) {
         if (sensorTypeNames[i] == NULL) {
@@ -3043,6 +3043,12 @@ static void cliStatus(char *cmdline)
             }
         }
     }
+#else 
+    #if defined(USE_GYRO_IMUF9001)
+    UNUSED(sensorHardwareNames);
+    UNUSED(sensorTypeNames);
+    cliPrintf(" | IMU-F Version: %lu", imufCurrentVersion);
+    #endif
 #endif /* USE_SENSOR_NAMES */
     cliPrintLinefeed();
 
