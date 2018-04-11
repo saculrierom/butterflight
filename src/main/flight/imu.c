@@ -241,6 +241,7 @@ FAST_CODE float calcCogError(float courseOverGround){
 }
 
 FAST_CODE void applySensorCorrection(quaternion *vError){
+    UNUSED(vError);
 #ifdef USE_GPS
     if (sensors(SENSOR_GPS) && STATE(GPS_FIX) && gpsSol.numSat >= 5 && gpsSol.groundSpeed >= 600) {
         float courseOverGround = 0;        
