@@ -77,9 +77,6 @@ int32_t accSum[XYZ_AXIS_COUNT];
 uint32_t accTimeSum = 0;        // keep track for integration of acc
 int accSumCount = 0;
 float accVelScale;
-#ifdef USE_ACC_IMUF9001
-volatile bool calculateQuats = true;
-#endif
 
 static float throttleAngleScale;
 static float fc_acc;
@@ -140,10 +137,6 @@ void imuInit(void)
     if (pthread_mutex_init(&imuUpdateLock, NULL) != 0) {
         printf("Create imuUpdateLock error!\n");
     }
-#endif
-
-#ifdef USE_ACC_IMUF9001
-    calculateQuats = gyroConfig()->imuf_mode != GTBCM_GYRO_ACC_QUAT_FILTER_F;
 #endif
 }
 
@@ -425,16 +418,14 @@ void imuUpdateAttitude(timeUs_t currentTimeUs)
 {
 #ifdef USE_ACC_IMUF9001
     UNUSED(currentTimeUs);
-    if (!calculateQuats) {
-        IMU_LOCK;
-        qAttitude.w = imufQuat.w;
-        qAttitude.x = imufQuat.x;
-        qAttitude.y = imufQuat.y;
-        qAttitude.z = imufQuat.z;
-        imuUpdateEulerAngles();
-        IMU_UNLOCK;
-    } 
-    else 
+    IMU_LOCK;
+    qAttitude.w = imufQuat.w;
+    qAttitude.x = imufQuat.x;
+    qAttitude.y = imufQuat.y;
+    qAttitude.z = imufQuat.z;
+    imuUpdateEulerAngles();
+    IMU_UNLOCK;
+    return;
 #endif //USE_ACC_IMUF9001
     if (sensors(SENSOR_ACC) && acc.isAccelUpdatedAtLeastOnce) {
         IMU_LOCK;

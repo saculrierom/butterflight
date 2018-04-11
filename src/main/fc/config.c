@@ -353,13 +353,6 @@ void validateAndFixGyroConfig(void)
         //digital protocols drop packets at 32k accorgins to blheli_32 team. constrain them to < 16K pid.
         gyroConfigMutable()->gyro_sync_denom = 2;
     }
-    //if gyro is < 32k, use quaternion output.
-    if (gyroConfigMutable()->gyro_sync_denom > 1) {
-       gyroConfigMutable()->imuf_mode = GTBCM_GYRO_ACC_QUAT_FILTER_F; 
-    } else {
-    //don't use quats at 32k. use gyro + ACC
-       gyroConfigMutable()->imuf_mode = GTBCM_GYRO_ACC_FILTER_F;
-    }
     //keeop imuf_rate in sync with the gyro.
     gyroConfigMutable()->imuf_rate = constrain(gyroConfigMutable()->gyro_sync_denom - 1, 0, 5);
     #endif
