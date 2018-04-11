@@ -344,7 +344,6 @@ static void validateAndFixConfig(void)
 void validateAndFixGyroConfig(void)
 {
     #ifdef USE_GYRO_IMUF9001
-
     //keeop imuf_rate in sync with the gyro.
     gyroConfigMutable()->imuf_rate = constrain(gyroConfigMutable()->gyro_sync_denom - 1, 0, 5);
     #endif
