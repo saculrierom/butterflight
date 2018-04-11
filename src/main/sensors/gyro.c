@@ -599,7 +599,7 @@ static bool isDynamicFilterActive(void)
 static void gyroInitFilterDynamicNotch(gyroSensor_t *gyroSensor)
 {
     gyroSensor->notchFilterDynApplyFn = nullFilterApply;
-    #ifndef USE_GYRO_IMUF9001
+#ifndef USE_GYRO_IMUF9001
     if (isDynamicFilterActive()) {
         gyroSensor->notchFilterDynApplyFn = (filterApplyFnPtr)biquadFilterApplyDF1; // must be this function, not DF2
         const float notchQ = filterGetNotchQ(400, 390); //just any init value
@@ -1000,10 +1000,10 @@ static FAST_CODE void gyroUpdateSensor(gyroSensor_t *gyroSensor, timeUs_t curren
                 break;
             }
 #endif // USE_GYRO_BIQUAD_RC_FIR2
-#endif //USE_GYRO_IMUF9001
 #ifdef USE_GYRO_DATA_ANALYSE
             gyroADCf = gyroSensor->notchFilterDynApplyFn((filter_t *)&gyroSensor->notchFilterDyn[axis], gyroADCf);
 #endif
+#endif //USE_GYRO_IMUF9001
 #ifndef USE_GYRO_IMUF9001
             gyroADCf = gyroSensor->notchFilter1ApplyFn((filter_t *)&gyroSensor->notchFilter1[axis], gyroADCf);
             gyroADCf = gyroSensor->notchFilter2ApplyFn((filter_t *)&gyroSensor->notchFilter2[axis], gyroADCf);
