@@ -37,6 +37,7 @@
 #include "drivers/sensor.h"
 #include "drivers/time.h"
 #include "fc/config.h"
+#include "fc/runtime_config.h"
 
 #include "sensors/boardalignment.h"
 
@@ -149,7 +150,7 @@ int imuf9001Whoami(const gyroDev_t *gyro)
     uint32_t attempt;
     imufCommand_t reply;
 
-    for (attempt = 0; attempt < 3; attempt++)
+    for (attempt = 0; attempt < 10; attempt++)
     {
         if (imuf9001SendReceiveCommand(gyro, IMUF_COMMAND_REPORT_INFO, &reply, NULL))
         {
@@ -196,7 +197,7 @@ uint8_t imuf9001SpiDetect(const gyroDev_t *gyro)
 
     hardwareInitialised = true;
 
-    for (int x=0; x<5; x++)
+    for (int x=0; x<7; x++)
     {
         int returnCheck;
         if (x)
@@ -252,7 +253,7 @@ void imufSpiGyroInit(gyroDev_t *gyro)
     rxData.param8 = ( (int16_t)boardAlignment()->rollDegrees << 16 ) | returnGyroAlignmentForImuf9001();
     rxData.param9 = ( (int16_t)boardAlignment()->yawDegrees << 16 ) | (int16_t)boardAlignment()->pitchDegrees;
 
-    for (attempt = 0; attempt < 3; attempt++)
+    for (attempt = 0; attempt < 10; attempt++)
     {
         if(attempt)
         {
@@ -267,6 +268,7 @@ void imufSpiGyroInit(gyroDev_t *gyro)
             return;
         }
     }
+    setArmingDisabled(ARMING_DISABLED_NO_GYRO);
 }
 
 bool imufReadAccData(accDev_t *acc) {

@@ -424,13 +424,14 @@ static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
 void imuUpdateAttitude(timeUs_t currentTimeUs)
 {
 #ifdef USE_ACC_IMUF9001
+    UNUSED(currentTimeUs);
     if (!calculateQuats) {
         IMU_LOCK;
         qAttitude.w = imufQuat.w;
         qAttitude.x = imufQuat.x;
         qAttitude.y = imufQuat.y;
         qAttitude.z = imufQuat.z;
-        imuCalculateEstimatedAttitude(currentTimeUs);
+        imuUpdateEulerAngles();
         IMU_UNLOCK;
     } 
     else 
