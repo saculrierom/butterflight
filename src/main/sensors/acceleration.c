@@ -364,7 +364,7 @@ bool accInit(void)
         }
     }
     #ifndef USE_ACC_IMUF9001
-    if (accelerometerConfig()->acc_align != CW0_DEG) {
+    if (accelerometerConfig()->acc_align != ALIGN_DEFAULT) {
         acc.dev.accAlign = accelerometerConfig()->acc_align;
     }
     #endif //USE_ACC_IMUF9001
@@ -374,6 +374,8 @@ bool accInit(void)
 
 void accSetCalibrationCycles(uint16_t calibrationCyclesRequired)
 {
+    accResetFlightDynamicsTrims();
+    memset(&accumulatedMeasurements, 0, sizeof(accumulatedMeasurements));
     calibratingA = calibrationCyclesRequired;
 }
 
