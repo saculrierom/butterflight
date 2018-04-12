@@ -364,7 +364,6 @@ static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
 
 #if defined(SIMULATOR_BUILD) && defined(SKIP_IMU_CALC)
     UNUSED(imuMahonyAHRSupdate);
-    UNUSED(courseOverGround);
 #else
 
 #if defined(SIMULATOR_BUILD) && defined(SIMULATOR_IMU_SYNC)
