@@ -88,6 +88,5 @@ void accUpdate(timeUs_t currentTimeUs, rollAndPitchTrims_t *rollAndPitchTrims);
 bool accGetAverage(quaternion *average);
 #endif
 union flightDynamicsTrims_u;
-void setAccelerationTrims(union flightDynamicsTrims_u *accelerationTrimsToUse);
 void accInitFilters(void);
 bool accIsHealthy(quaternion *q);

@@ -154,7 +154,6 @@ void activateConfig(void)
 #endif
 
     failsafeReset();
-    setAccelerationTrims(&accelerometerConfigMutable()->accZero);
     accInitFilters();
 
     imuConfigure(throttleCorrectionConfig()->throttle_correction_angle);

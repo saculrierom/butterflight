@@ -363,6 +363,8 @@ bool accInit(void)
         acc.dev.accAlign = accelerometerConfig()->acc_align;
     }
     #endif //USE_ACC_IMUF9001
+
+    accelerationTrims = &accelerometerConfigMutable()->accZero;
     
     return true;
 }
@@ -384,7 +386,7 @@ static bool isOnFinalAccelerationCalibrationCycle(void)
 
 static bool isOnFirstAccelerationCalibrationCycle(void)
 {
-    return calibratingA == CALIBRATING_ACC_CYCLES;\
+    return calibratingA == CALIBRATING_ACC_CYCLES;
 }
 
 static void performAccelerationCalibration(rollAndPitchTrims_t *rollAndPitchTrims)
@@ -531,11 +533,6 @@ bool accGetAverage(quaternion *vAverage) {
   }
 }
 #endif
-
-void setAccelerationTrims(flightDynamicsTrims_t *accelerationTrimsToUse)
-{
-    accelerationTrims = accelerationTrimsToUse;
-}
 
 void accInitFilters(void)
 {
