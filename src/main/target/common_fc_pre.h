@@ -45,6 +45,10 @@
 #endif
 
 #ifdef STM32F4
+#define USE_SRAM2
+#if defined(STM32F40_41xxx)
+#define USE_FAST_RAM
+#endif
 #define USE_DSHOT
 #define USE_ESC_SENSOR
 #define I2C3_OVERCLOCK true
@@ -59,10 +63,10 @@
 
 #endif // STM32F4
 
-#ifdef STM32F722xx
-#define USE_ITCM_RAM
-#endif
 #ifdef STM32F7
+#define USE_SRAM2
+#define USE_ITCM_RAM
+#define USE_FAST_RAM
 #define USE_DSHOT
 #define USE_ESC_SENSOR
 #define I2C3_OVERCLOCK true
@@ -91,15 +95,21 @@
 #endif // USE_ITCM_RAM
 
 #ifdef USE_FAST_RAM
-#ifdef __APPLE__
-#define FAST_RAM                    __attribute__ ((section("__DATA,__.fastram_bss"), aligned(4)))
-#else
 #define FAST_RAM                    __attribute__ ((section(".fastram_bss"), aligned(4)))
-#endif
 #else
 #define FAST_RAM
 #endif // USE_FAST_RAM
 
+#ifdef STM32F4
+// Data in RAM which is guaranteed to not be reset on hot reboot
+#define PERSISTENT					__attribute__ ((section(".persistent_data"), aligned(4)))
+#endif
+
+#ifdef USE_SRAM2
+#define SRAM2						__attribute__ ((section(".sram2"), aligned(4)))
+#else
+#define SRAM2
+#endif
 
 #define USE_CLI
 #define USE_PPM

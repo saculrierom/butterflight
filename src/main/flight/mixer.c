@@ -684,6 +684,8 @@ static void applyMixToMotors(float motorMix[MAX_SUPPORTED_MOTORS])
 }
 
 void mixTable(timeUs_t currentTimeUs, uint8_t vbatPidCompensation)
+
+NOINLINE void mixTable(timeUs_t currentTimeUs, uint8_t vbatPidCompensation)
 {
     if (isFlipOverAfterCrashMode()) {
         applyFlipOverAfterCrashModeToMotors();
