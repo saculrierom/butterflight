@@ -133,7 +133,6 @@ static bool flipOverAfterCrashMode = false;
 
 static uint32_t disarmAt;     // Time of automatic disarm when "Don't spin the motors when armed" is enabled and auto_disarm_delay is nonzero
 
-bool isRXDataNew;
 static int lastArmingDisabledReason = 0;
 
 #ifdef USE_RUNAWAY_TAKEOFF
@@ -175,9 +174,6 @@ static bool isCalibrating(void)
     if (sensors(SENSOR_BARO) && !isBaroCalibrationComplete()) {
         return true;
     }
-#endif
-#ifdef USE_GYRO_IMUF9001
-    return false;
 #endif
     // Note: compass calibration is handled completely differently, outside of the main loop, see f.CALIBRATE_MAG
 
@@ -388,7 +384,9 @@ void tryArm(void)
         if (isModeActivationConditionPresent(BOXPREARM)) {
             ENABLE_ARMING_FLAG(WAS_ARMED_WITH_PREARM);
         }
-        imuQuaternionHeadfreeOffsetSet();
+        if (sensors(SENSOR_ACC)){
+            imuQuaternionHeadfreeOffsetSet();
+        }
 
         disarmAt = millis() + armingConfig()->auto_disarm_delay * 1000;   // start disarm timeout, will be extended when throttle is nonzero
 
@@ -396,11 +394,14 @@ void tryArm(void)
 
         //beep to indicate arming
 #ifdef USE_GPS
-        if (feature(FEATURE_GPS) && STATE(GPS_FIX) && gpsSol.numSat >= 5) {
-            beeper(BEEPER_ARMING_GPS_FIX);
-        } else {
+        if(!feature(FEATURE_GPS)) 
+        {
             beeper(BEEPER_ARMING);
-        }
+        } 
+        else if(STATE(GPS_FIX) && gpsSol.numSat >= 5) 
+        {
+            beeper(BEEPER_ARMING_GPS_FIX);
+        } 
 #else
         beeper(BEEPER_ARMING);
 #endif
@@ -762,11 +763,8 @@ bool processRx(timeUs_t currentTimeUs)
 
     if (FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(HORIZON_MODE)) {
         LED1_ON;
-        // increase frequency of attitude task to reduce drift when in angle or horizon mode
-        rescheduleTask(TASK_ATTITUDE, TASK_PERIOD_HZ(500));
     } else {
         LED1_OFF;
-        rescheduleTask(TASK_ATTITUDE, TASK_PERIOD_HZ(100));
     }
 
     if (!IS_RC_MODE_ACTIVE(BOXPREARM) && ARMING_FLAG(WAS_ARMED_WITH_PREARM)) {

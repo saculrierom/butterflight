@@ -28,8 +28,6 @@
 #define MAX_FIR_DENOISE_WINDOW_SIZE 120
 #endif
 
-#define MAX_LMA_WINDOW_SIZE 12
-
 struct filter_s;
 typedef struct filter_s filter_t;
 
@@ -66,18 +64,13 @@ typedef struct firFilterDenoise_s {
 } firFilterDenoise_t;
 
 typedef struct fastKalman_s {
-    float k;       // "kalman" gain
+    float q;       // process noise covariance
+    float r;       // measurement noise covariance
+    float p;       // estimation error covariance matrix
+    float k;       // kalman gain
     float x;       // state
     float lastX;   // previous state
 } fastKalman_t;
-
-typedef struct laggedMovingAverage_s {
-    uint16_t movingWindowIndex;
-    uint16_t windowSize;
-    float weight;
-    float movingSum;
-    float buf[MAX_LMA_WINDOW_SIZE];
-} laggedMovingAverage_t;
 
 typedef enum {
     FILTER_PT1 = 0,
@@ -90,13 +83,6 @@ typedef enum {
 
 typedef enum {
     FILTER_LPF,    // 2nd order Butterworth section
-    KD_FILTER_CLASSIC = 0,
-    KD_FILTER_SP,
-    KD_FILTER_NOSP,
-} kdFilterStyle_e;
-
-typedef enum {
-    FILTER_LPF,
     FILTER_NOTCH,
     FILTER_BPF,
     FILTER_LPF1,   // 1st order Butterworth section
@@ -135,15 +121,8 @@ float biquadFilterApply(biquadFilter_t *filter, float input);
 float biquadCascadeFilterApply(biquadFilterCascade_t *filter, float input);
 float filterGetNotchQ(float centerFreq, float cutoffFreq);
 
-void biquadRCFIR2FilterInit(biquadFilter_t *filter, float k);
-
-void fastKalmanInit(fastKalman_t *filter, float k);
+void fastKalmanInit(fastKalman_t *filter, float q, float r, float p);
 float fastKalmanUpdate(fastKalman_t *filter, float input);
-
-void lmaSmoothingInit(laggedMovingAverage_t *filter, uint8_t windowSize, float weight);
-float lmaSmoothingUpdate(laggedMovingAverage_t *filter, float input);
-void fixedKKalmanInit(fastKalman_t *filter, uint16_t f_cut, float dT);
-float fixedKKalmanUpdate(fastKalman_t *filter, float input);
 
 // not exactly correct, but very very close and much much faster
 #define filterGetNotchQApprox(centerFreq, cutoff)   ((float)(cutoff * centerFreq) / ((float)(centerFreq - cutoff) * (float)(centerFreq + cutoff)))

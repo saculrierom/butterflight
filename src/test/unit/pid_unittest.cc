@@ -87,7 +87,6 @@ void setDefaultTestSettings(void) {
     pidProfile->pid[PID_LEVEL] =  { 50, 50, 75 };
 
     pidProfile->pidSumLimit = PIDSUM_LIMIT;
-    pidProfile->pidSumLimitYaw = PIDSUM_LIMIT_YAW;
     pidProfile->yaw_lowpass_hz = 0;
     pidProfile->dterm_lowpass_hz = 100;
     pidProfile->dterm_lowpass2_hz = 0;

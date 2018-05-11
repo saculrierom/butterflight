@@ -62,7 +62,7 @@
 #define MSP_PROTOCOL_VERSION                0
 
 #define API_VERSION_MAJOR                   1  // increment when major changes are made
-#define API_VERSION_MINOR                   39 // increment after a release, to set the version for all changes to go into the following release (if no changes to MSP are made between the releases, this can be reverted before the release)
+#define API_VERSION_MINOR                   40 // increment after a release, to set the version for all changes to go into the following release (if no changes to MSP are made between the releases, this can be reverted before the release)
 
 #define API_VERSION_LENGTH                  2
 
@@ -308,6 +308,8 @@
 #define MSP_SET_GPS_CONFIG       223    //out message         GPS configuration
 #define MSP_SET_COMPASS_CONFIG   224    //out message         Compass configuration
 
+#define   MSP_IMUF_CONFIG        227
+#define   MSP_SET_IMUF_CONFIG    228
 // #define MSP_BIND                 240    //in message          no param
 // #define MSP_ALARMS               242
 

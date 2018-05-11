@@ -22,29 +22,31 @@
 
 #include "common/axis.h"
 #include "common/time.h"
+#include "common/maths.h"
 #include "pg/pg.h"
 #include "drivers/bus.h"
 #include "drivers/sensor.h"
 
-typedef enum {
-    GYRO_NONE = 0,
-    GYRO_DEFAULT,
-    GYRO_MPU6050,
-    GYRO_L3G4200D,
-    GYRO_MPU3050,
-    GYRO_L3GD20,
-    GYRO_MPU6000,
-    GYRO_MPU6500,
-    GYRO_MPU9250,
-    GYRO_ICM20601,
-    GYRO_ICM20602,
-    GYRO_ICM20608G,
-    GYRO_ICM20649,
-    GYRO_ICM20689,
-    GYRO_BMI160,
-    GYRO_IMUF9001,
-    GYRO_FAKE
-} gyroSensor_e;
+extern float vGyroStdDevModulus;
+ typedef enum {
+     GYRO_NONE = 0,
+     GYRO_DEFAULT,
+     GYRO_MPU6050,
+     GYRO_L3G4200D,
+     GYRO_MPU3050,
+     GYRO_L3GD20,
+     GYRO_MPU6000,
+     GYRO_MPU6500,
+     GYRO_MPU9250,
+     GYRO_ICM20601,
+     GYRO_ICM20602,
+     GYRO_ICM20608G,
+     GYRO_ICM20649,
+     GYRO_ICM20689,
+     GYRO_BMI160,
+     GYRO_IMUF9001,
+     GYRO_FAKE
+ } gyroSensor_e;
 
 typedef struct gyro_s {
     uint32_t targetLooptime;
@@ -91,10 +93,6 @@ typedef struct gyroConfig_s {
     bool     gyro_use_32khz;
     uint8_t  gyro_to_use;
 
-    // Lagged Moving Average smoother
-    uint8_t gyro_lma_depth;
-    uint8_t gyro_lma_weight;
-
     // Lowpass primary/secondary
     uint8_t  gyro_lowpass_type;
     uint8_t  gyro_lowpass2_type;
@@ -130,9 +128,6 @@ typedef struct gyroConfig_s {
     uint16_t gyro_filter_r;
     uint16_t gyro_filter_p;
 #endif
-    uint8_t  gyro_stage2_filter_type;
-    int16_t  gyro_offset_yaw;
-
     bool     yaw_spin_recovery;
     int16_t  yaw_spin_threshold;
 
@@ -150,7 +145,7 @@ void gyroDmaSpiFinishRead(void);
 void gyroDmaSpiStartRead(void);
 #endif
 void gyroUpdate(timeUs_t currentTimeUs);
-bool gyroGetAccumulationAverage(float *accumulation);
+bool gyroGetAverage(quaternion *vAverage);
 const busDevice_t *gyroSensorBus(void);
 struct mpuConfiguration_s;
 const struct mpuConfiguration_s *gyroMpuConfiguration(void);

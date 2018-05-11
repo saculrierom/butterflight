@@ -20,7 +20,12 @@
 
 #pragma once
 
-extern uint16_t currentRxRefreshRate;
+typedef enum {
+    RC_INTERP_RP = 0, // roll and pitch
+    RC_INTERP_RPY = 1, //roll, pitch, and yaw
+    RC_INTERP_RPYT = 2 //roll, pitch, yaw, and throttle
+} rcInterpChannels_e;
+volatile uint16_t currentRxRefreshRate;
 
 void processRcCommand(void);
 float getSetpointRate(int axis);

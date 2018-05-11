@@ -96,7 +96,7 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .pid = {
             [PID_ROLL] =  { 40, 40, 20 },
             [PID_PITCH] = { 58, 50, 22 },
-            [PID_YAW] =   { 70, 45, 20 },
+            [PID_YAW] =   { 55, 45, 5 },
             [PID_ALT] =   { 50, 0, 0 },
             [PID_POS] =   { 15, 0, 0 },     // POSHOLD_P * 100, POSHOLD_I * 100,
             [PID_POSR] =  { 34, 14, 53 },   // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
@@ -107,14 +107,12 @@ void resetPidProfile(pidProfile_t *pidProfile)
         },
 
         .pidSumLimit = PIDSUM_LIMIT,
-        .pidSumLimitYaw = PIDSUM_LIMIT_YAW,
         .yaw_lowpass_hz = 0,
         .dterm_lowpass_hz = 100,    // filtering ON by default
         .dterm_lowpass2_hz = 0,    // second Dterm LPF OFF by default
         .dterm_notch_hz = 260,
         .dterm_notch_cutoff = 160,
         .dterm_filter_type = FILTER_PT1,
-        .dterm_filter_style = KD_FILTER_CLASSIC,
         .itermWindupPointPercent = 50,
         .vbatPidCompensation = 0,
         .pidAtMinThrottle = PID_STABILISATION_ON,
@@ -190,28 +188,25 @@ typedef union dtermLowpass_u {
 #endif
 } dtermLowpass_t;
 
-static FAST_RAM_ZERO_INIT filterApplyFnPtr dtermNotchApplyFn;
-static FAST_RAM_ZERO_INIT biquadFilter_t dtermNotch[2];
-static FAST_RAM_ZERO_INIT filterApplyFnPtr dtermLowpassApplyFn;
-static FAST_RAM_ZERO_INIT dtermLowpass_t dtermLowpass[2];
-static FAST_RAM_ZERO_INIT filterApplyFnPtr dtermLowpass2ApplyFn;
-static FAST_RAM_ZERO_INIT pt1Filter_t dtermLowpass2[2];
-static FAST_RAM_ZERO_INIT filterApplyFnPtr ptermYawLowpassApplyFn;
-static FAST_RAM_ZERO_INIT pt1Filter_t ptermYawLowpass;
+static FAST_RAM filterApplyFnPtr dtermNotchApplyFn;
+static FAST_RAM biquadFilter_t dtermNotch[3];
+static FAST_RAM filterApplyFnPtr dtermLowpassApplyFn;
+static FAST_RAM dtermLowpass_t dtermLowpass[3];
+static FAST_RAM filterApplyFnPtr ptermYawLowpassApplyFn;
+static FAST_RAM pt1Filter_t ptermYawLowpass;
 
 void pidInitFilters(const pidProfile_t *pidProfile)
 {
-    BUILD_BUG_ON(FD_YAW != 2); // only setting up Dterm filters on roll and pitch axes, so ensure yaw axis is 2
+    // BUILD_BUG_ON(FD_YAW != 2); // only setting up Dterm filters on roll and pitch axes, so ensure yaw axis is 2
 
     if (targetPidLooptime == 0) {
         // no looptime set, so set all the filters to null
         dtermNotchApplyFn = nullFilterApply;
         dtermLowpassApplyFn = nullFilterApply;
-        ptermYawLowpassApplyFn = nullFilterApply;
         return;
     }
 
-    const uint32_t pidFrequencyNyquist = (1.0f / dT) / 2; // No rounding needed
+        const uint32_t pidFrequencyNyquist = (1.0f / dT) / 2; // No rounding needed
 
     uint16_t dTermNotchHz;
     if (pidProfile->dterm_notch_hz <= pidFrequencyNyquist) {
@@ -232,16 +227,6 @@ void pidInitFilters(const pidProfile_t *pidProfile)
         }
     } else {
         dtermNotchApplyFn = nullFilterApply;
-    }
-
-    //2nd Dterm Lowpass Filter
-    if (pidProfile->dterm_lowpass2_hz == 0 || pidProfile->dterm_lowpass2_hz > pidFrequencyNyquist) {
-    	dtermLowpass2ApplyFn = nullFilterApply;
-    } else {
-        dtermLowpass2ApplyFn = (filterApplyFnPtr)pt1FilterApply;
-        for (int axis = FD_ROLL; axis <= FD_PITCH; axis++) {
-            pt1FilterInit(&dtermLowpass2[axis], pt1FilterGain(pidProfile->dterm_lowpass2_hz, dT));
-        }
     }
 
     if (pidProfile->dterm_lowpass_hz == 0 || pidProfile->dterm_lowpass_hz > pidFrequencyNyquist) {
@@ -543,29 +528,29 @@ static void handleItermRotation()
 // Based on 2DOF reference design (matlab)
 void FAST_CODE pidController(const pidProfile_t *pidProfile, const rollAndPitchTrims_t *angleTrim, timeUs_t currentTimeUs)
 {
-    static float previousGyroRateDterm[2];
-    static float previousPidSetpoint[2];
-
+    static float previousGyroRateDterm[3];
+    static float previousPidSetpoint[3];
     const float tpaFactor = getThrottlePIDAttenuation();
     const float motorMixRange = getMotorMixRange();
 
 #ifdef USE_YAW_SPIN_RECOVERY
     const bool yawSpinActive = gyroYawSpinDetected();
 #endif
-
+    // calculate actual deltaT in seconds
+    
     // Dynamic i component,
     // gradually scale back integration when above windup point
     const float dynCi = MIN((1.0f - motorMixRange) * ITermWindupPointInv, 1.0f) * dT * itermAccelerator;
 
     // Dynamic d component, enable 2-DOF PID controller only for rate mode
     const float dynCd = flightModeFlags ? 0.0f : dtermSetpointWeight;
+    float currentPidSetpoint;
 
     // Precalculate gyro deta for D-term here, this allows loop unrolling
-    float gyroRateDterm[2];
-    for (int axis = FD_ROLL; axis < FD_YAW; ++axis) {
-        gyroRateDterm[axis] = dtermNotchApplyFn((filter_t *) &dtermNotch[axis], gyro.gyroADCf[axis]);
-        gyroRateDterm[axis] = dtermLowpassApplyFn((filter_t *) &dtermLowpass[axis], gyroRateDterm[axis]);
-        gyroRateDterm[axis] = dtermLowpass2ApplyFn((filter_t *) &dtermLowpass2[axis], gyroRateDterm[axis]);
+    float gyroRateDterm[3];
+    for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {
+        gyroRateDterm[axis] = dtermLowpassApplyFn((filter_t *) &dtermLowpass[axis],gyro.gyroADCf[axis]);
+        gyroRateDterm[axis] = dtermNotchApplyFn((filter_t *) &dtermNotch[axis], gyroRateDterm[axis]);
     }
 
     if (itermRotation) {
@@ -573,8 +558,8 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, const rollAndPitchT
     }
 
     // ----------PID controller----------
-    for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {
-        float currentPidSetpoint = getSetpointRate(axis);
+    for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
+        currentPidSetpoint = getSetpointRate(axis);
         if (maxVelocity[axis]) {
             currentPidSetpoint = accelerationLimit(axis, currentPidSetpoint);
         }
@@ -619,35 +604,33 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, const rollAndPitchT
         }
 
         // -----calculate D component
-        if (axis != FD_YAW) {
-            // no transition if relaxFactor == 0
-            float transition = relaxFactor > 0 ? MIN(1.f, getRcDeflectionAbs(axis) * relaxFactor) : 1;
+        // no transition if relaxFactor == 0
+        float transition = relaxFactor > 0 ? MIN(1.f, getRcDeflectionAbs(axis) * relaxFactor) : 1;
 
-            // Divide rate change by dT to get differential (ie dr/dt).
-            // dT is fixed and calculated from the target PID loop time
-            // This is done to avoid DTerm spikes that occur with dynamically
-            // calculated deltaT whenever another task causes the PID
-            // loop execution to be delayed.
-            const float delta = (
-                dynCd * transition * (currentPidSetpoint - previousPidSetpoint[axis]) -
-                (gyroRateDterm[axis] - previousGyroRateDterm[axis])) / dT;
+        // Divide rate change by dT to get differential (ie dr/dt).
+        // dT is fixed and calculated from the target PID loop time
+        // This is done to avoid DTerm spikes that occur with dynamically
+        // calculated deltaT whenever another task causes the PID
+        // loop execution to be delayed.
+        const float delta = (
+            dynCd * transition * (currentPidSetpoint - previousPidSetpoint[axis]) -
+            (gyroRateDterm[axis] - previousGyroRateDterm[axis])) / dT;
 
-            previousPidSetpoint[axis] = currentPidSetpoint;
-            previousGyroRateDterm[axis] = gyroRateDterm[axis];
+        previousPidSetpoint[axis] = currentPidSetpoint;
+        previousGyroRateDterm[axis] = gyroRateDterm[axis];
 
-            detectAndSetCrashRecovery(pidProfile->crash_recovery, axis, currentTimeUs, delta, errorRate);
+        detectAndSetCrashRecovery(pidProfile->crash_recovery, axis, currentTimeUs, delta, errorRate);
 
-            pidData[axis].D = pidCoefficient[axis].Kd * delta * tpaFactor;
+        pidData[axis].D = pidCoefficient[axis].Kd * delta * tpaFactor;
 
 #ifdef USE_YAW_SPIN_RECOVERY
-            if (yawSpinActive)  {
-                // zero PIDs on pitch and roll leaving yaw P to correct spin 
-                pidData[axis].P = 0;
-                pidData[axis].I = 0;
-                pidData[axis].D = 0;
-            }
-#endif // USE_YAW_SPIN_RECOVERY
+        if (yawSpinActive)  {
+            // zero PIDs on pitch and roll leaving yaw P to correct spin 
+            pidData[axis].P = 0;
+            pidData[axis].I = 0;
+            pidData[axis].D = 0;
         }
+#endif // USE_YAW_SPIN_RECOVERY
     }
 
     // calculating the PID sum
