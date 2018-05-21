@@ -47,6 +47,7 @@
 
 #define M25P16_CS_PIN           PC14
 #define M25P16_SPI_INSTANCE     SPI3
+#define FLASH_SPI_INSTANCE      SPI3
 #define USE_FLASHFS
 #define USE_FLASH_M25P16
 

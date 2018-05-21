@@ -114,7 +114,6 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .dterm_notch_hz = 260,
         .dterm_notch_cutoff = 160,
         .dterm_filter_type = FILTER_PT1,
-        .dterm_filter_style = KD_FILTER_CLASSIC,
         .itermWindupPointPercent = 50,
         .vbatPidCompensation = 0,
         .pidAtMinThrottle = PID_STABILISATION_ON,

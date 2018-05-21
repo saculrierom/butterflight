@@ -390,22 +390,6 @@ void biquadRCFIR2FilterInit(biquadFilter_t *filter, float k)
     filter->a2 = 0;
 }
 
-// rs2k's fast "kalman" filter
-void fastKalmanInit(fastKalman_t *filter, float k)
-{
-    filter->x     = 0.0f;  // set initial value, can be zero if unknown
-    filter->lastX = 0.0f;  // set initial value, can be zero if unknown
-    filter->k     = k;     // "kalman" gain - half of RC coefficient, calculated externally
-}
-
-FAST_CODE float fastKalmanUpdate(fastKalman_t *filter, float input)
-{
-    filter->x += (filter->x - filter->lastX);
-    filter->lastX = filter->x;
-    filter->x += filter->k * (input - filter->x);
-    return filter->x;
-}
-
 void lmaSmoothingInit(laggedMovingAverage_t *filter, uint8_t windowSize, float weight)
 {
     filter->movingWindowIndex = 0;
@@ -427,21 +411,31 @@ FAST_CODE float lmaSmoothingUpdate(laggedMovingAverage_t *filter, float input)
     return input + (((filter->movingSum  / filter->windowSize) - input) * filter->weight);
 }
 
-// rs2k's fast "kalman" filter per Fujin
-void fixedKKalmanInit(fastKalman_t *filter, uint16_t f_cut, float dT)
+// Fast two-state Kalman
+void fastKalmanInit(fastKalman_t *filter, float q, float r, float p)
 {
-    float RC = 1.0f / ( 2.0f * M_PI_FLOAT * f_cut );
-    float a = dT / (RC + dT);
-
+    filter->q     = q * 0.000001f; // add multiplier to make tuning easier
+    filter->r     = r * 0.001f;    // add multiplier to make tuning easier
+    filter->p     = p * 0.001f;    // add multiplier to make tuning easier
     filter->x     = 0.0f;          // set initial value, can be zero if unknown
     filter->lastX = 0.0f;          // set initial value, can be zero if unknown
-    filter->k     = a / 2;         // "kalman" gain - half of RC coefficient
+    filter->k     = 0.0f;          // kalman gain
 }
 
-FAST_CODE float fixedKKalmanUpdate(fastKalman_t *filter, float input)
+FAST_CODE float fastKalmanUpdate(fastKalman_t *filter, float input)
 {
+    // project the state ahead using acceleration
     filter->x += (filter->x - filter->lastX);
+
+    // update last state
     filter->lastX = filter->x;
+
+    // prediction update
+    filter->p = filter->p + filter->q;
+
+    // measurement update
+    filter->k = filter->p / (filter->p + filter->r);
     filter->x += filter->k * (input - filter->x);
+    filter->p = (1.0f - filter->k) * filter->p;
     return filter->x;
 }

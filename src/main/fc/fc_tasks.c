@@ -111,6 +111,8 @@
 void taskBstMasterProcess(timeUs_t currentTimeUs);
 #endif
 
+volatile bool isRXDataNew;
+
 bool taskSerialCheck(timeUs_t currentTimeUs, timeDelta_t currentDeltaTimeUs)
 {
     UNUSED(currentTimeUs);

@@ -20,7 +20,7 @@
 
 #pragma once
 
-extern uint16_t currentRxRefreshRate;
+volatile uint16_t currentRxRefreshRate;
 
 void processRcCommand(void);
 float getSetpointRate(int axis);

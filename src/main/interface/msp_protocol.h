@@ -308,6 +308,8 @@
 #define MSP_SET_GPS_CONFIG       223    //out message         GPS configuration
 #define MSP_SET_COMPASS_CONFIG   224    //out message         Compass configuration
 
+#define   MSP_IMUF_CONFIG        227
+#define   MSP_SET_IMUF_CONFIG    228
 // #define MSP_BIND                 240    //in message          no param
 // #define MSP_ALARMS               242
 

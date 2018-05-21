@@ -46,6 +46,7 @@
 #include "flight/pid.h"
 #include "rx/rx.h"
 
+#include "scheduler/scheduler.h"
 #include "sensors/battery.h"
 
 typedef float (applyRatesFn)(const int axis, float rcCommandf, const float rcCommandfAbs);

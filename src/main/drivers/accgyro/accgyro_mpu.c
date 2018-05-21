@@ -360,12 +360,7 @@ static bool detectSPISensorsAndUpdateDetectionResult(gyroDev_t *gyro)
 #endif
 
 #ifdef  USE_GYRO_SPI_MPU9250
-#ifndef USE_DUAL_GYRO
-    spiBusSetInstance(&gyro->bus, MPU9250_SPI_INSTANCE);
-#endif
-
-#ifdef  USE_GYRO_SPI_MPU9250
-    #ifdef MPU9250_SPI_INSTANCE
+    #ifndef USE_DUAL_GYRO
         spiBusSetInstance(&gyro->bus, MPU9250_SPI_INSTANCE);
     #endif
     #ifdef MPU9250_CS_PIN
