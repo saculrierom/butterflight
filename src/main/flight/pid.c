@@ -78,7 +78,7 @@ PG_REGISTER_WITH_RESET_TEMPLATE(pidConfig_t, pidConfig, PG_PID_CONFIG, 2);
 #ifdef USE_RUNAWAY_TAKEOFF
 PG_RESET_TEMPLATE(pidConfig_t, pidConfig,
     .pid_process_denom = PID_PROCESS_DENOM_DEFAULT,
-    .runaway_takeoff_prevention = true,
+    .runaway_takeoff_prevention = false,
     .runaway_takeoff_deactivate_throttle = 25,  // throttle level % needed to accumulate deactivation time
     .runaway_takeoff_deactivate_delay = 500     // Accumulated time (in milliseconds) before deactivation in successful takeoff
 );
@@ -94,8 +94,8 @@ void resetPidProfile(pidProfile_t *pidProfile)
 {
     RESET_CONFIG(pidProfile_t, pidProfile,
         .pid = {
-            [PID_ROLL] =  { 40, 40, 30 },
-            [PID_PITCH] = { 58, 50, 35 },
+            [PID_ROLL] =  { 40, 40, 20 },
+            [PID_PITCH] = { 58, 50, 22 },
             [PID_YAW] =   { 70, 45, 20 },
             [PID_ALT] =   { 50, 0, 0 },
             [PID_POS] =   { 15, 0, 0 },     // POSHOLD_P * 100, POSHOLD_I * 100,
@@ -113,7 +113,8 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .dterm_lowpass2_hz = 0,    // second Dterm LPF OFF by default
         .dterm_notch_hz = 260,
         .dterm_notch_cutoff = 160,
-        .dterm_filter_type = FILTER_BIQUAD,
+        .dterm_filter_type = FILTER_PT1,
+        .dterm_filter_style = KD_FILTER_CLASSIC,
         .itermWindupPointPercent = 50,
         .vbatPidCompensation = 0,
         .pidAtMinThrottle = PID_STABILISATION_ON,
@@ -619,7 +620,7 @@ void pidController(const pidProfile_t *pidProfile, const rollAndPitchTrims_t *an
 
         // -----calculate D component
         if (axis != FD_YAW) {
-            // no transition if relaxFactor == 0
+  // no transition if relaxFactor == 0
             float transition = relaxFactor > 0 ? MIN(1.f, getRcDeflectionAbs(axis) * relaxFactor) : 1;
 
             // Divide rate change by dT to get differential (ie dr/dt).

@@ -191,7 +191,7 @@ static const char * const featureNames[] = {
     "RANGEFINDER", "TELEMETRY", "", "3D", "RX_PARALLEL_PWM",
     "RX_MSP", "RSSI_ADC", "LED_STRIP", "DISPLAY", "OSD",
     "", "CHANNEL_FORWARDING", "TRANSPONDER", "AIRMODE",
-    "", "", "RX_SPI", "SOFTSPI", "ESC_SENSOR", "ANTI_GRAVITY", "DYNAMIC_FILTER", NULL
+    "", "", "RX_SPI", "SOFTSPI", "ESC_SENSOR", "ANTI_GRAVITY", "DYNAMIC_FILTER", "LEGACY_SA_SUPPORT", NULL
 };
 
 // sync this with rxFailsafeChannelMode_e
@@ -4112,6 +4112,14 @@ typedef struct {
 }
 #endif
 
+#ifdef USE_GYRO_IMUF9001
+static void cliReportImufErrors(char *cmdline);
+static void cliImufUpdate(char *cmdline);
+#endif
+#ifdef MSD_ADDRESS
+static void cliMsd(char *cmdline);
+#endif
+
 static void cliHelp(char *cmdline);
 
 // should be sorted a..z for bsearch()
@@ -4160,6 +4168,13 @@ const clicmd_t cmdTable[] = {
 #endif
 #if defined(USE_GYRO_REGISTER_DUMP) && !defined(SIMULATOR_BUILD)
     CLI_COMMAND_DEF("gyroregisters", "dump gyro config registers contents", NULL, cliDumpGyroRegisters),
+#endif
+#ifdef USE_GYRO_IMUF9001
+    CLI_COMMAND_DEF("reportimuferrors", "report imu-f comm errors", NULL, cliReportImufErrors),
+    CLI_COMMAND_DEF("imufupdate", "update imu-f's firmware", NULL, cliImufUpdate),
+#endif
+#ifdef MSD_ADDRESS
+    CLI_COMMAND_DEF("msd", "boot into USB drive mode to download log files", NULL, cliMsd),
 #endif
     CLI_COMMAND_DEF("help", NULL, NULL, cliHelp),
 #ifdef USE_LED_STRIP
@@ -4218,6 +4233,55 @@ const clicmd_t cmdTable[] = {
     CLI_COMMAND_DEF("vtx", "vtx channels on switch", NULL, cliVtx),
 #endif
 };
+
+#ifdef USE_GYRO_IMUF9001
+static void cliReportImufErrors(char *cmdline)
+{
+    UNUSED(cmdline);
+    cliPrintf("Current Comm Errors: %lu", imufCrcErrorCount);
+    cliPrintLinefeed();
+}
+
+static void cliImufUpdate(char *cmdline)
+{
+    UNUSED(cmdline);
+    
+    if( (*((__IO uint32_t *)UPT_ADDRESS)) != 0xFFFFFFFF )
+    {
+        cliPrint("I muff, you muff, we all muff for IMU-F!");
+        cliPrintLinefeed();
+        (*((__IO uint32_t *)0x2001FFEC)) = 0xF431FA77;
+        delay(1000);
+        cliReboot();
+    }
+    else
+    {
+        cliPrint("Improper hex detected, please use the full hex from https://heliorc.com/wiring/");
+        cliPrintLinefeed();
+    }
+}
+#endif
+
+#ifdef MSD_ADDRESS
+static void cliMsd(char *cmdline)
+{
+    UNUSED(cmdline);
+
+    if( (*((__IO uint32_t *)MSD_ADDRESS)) != 0xFFFFFFFF )
+    {
+        cliPrint("Loading as USB drive!");
+        cliPrintLinefeed();
+        (*((__IO uint32_t *)0x2001FFF0)) = 0xF431FA11;
+        delay(1000);
+        cliReboot();
+    }
+    else
+    {
+        cliPrint("Improper hex detected, please use the full hex from https://heliorc.com/wiring/");
+        cliPrintLinefeed();
+    }
+}
+#endif
 
 static void cliHelp(char *cmdline)
 {

@@ -68,7 +68,7 @@
 
 #define MULTIWII_IDENTIFIER "MWII";
 #define BASEFLIGHT_IDENTIFIER "BAFL";
-#define BETAFLIGHT_IDENTIFIER "BTFL"
+#define BUTTERFLIGHT_IDENTIFIER "BTTR"
 #define CLEANFLIGHT_IDENTIFIER "CLFL"
 #define INAV_IDENTIFIER "INAV"
 #define RACEFLIGHT_IDENTIFIER "RCFL"
@@ -329,3 +329,9 @@
 #define MSP_SET_4WAY_IF          245    //in message          Sets 4way interface
 #define MSP_SET_RTC              246    //in message          Sets the RTC clock
 #define MSP_RTC                  247    //out message         Gets the RTC clock
+
+// ButterFlight
+#define MSP_FAST_KALMAN          225    //out message
+#define MSP_SET_FAST_KALMAN      226    //in message
+#define MSP_IMUF_CONFIG          227    //out message
+#define MSP_SET_IMUF_CONFIG      228    //in message

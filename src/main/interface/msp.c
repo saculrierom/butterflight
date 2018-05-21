@@ -123,7 +123,7 @@
 #include "hardware_revision.h"
 #endif
 
-static const char * const flightControllerIdentifier = BETAFLIGHT_IDENTIFIER; // 4 UPPER CASE alpha numeric characters that identify the flight controller.
+static const char * const flightControllerIdentifier = BUTTERFLIGHT_IDENTIFIER; // 4 UPPER CASE alpha numeric characters that identify the flight controller.
 
 #ifndef USE_OSD_SLAVE
 
@@ -1217,6 +1217,28 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst)
         sbufWriteU8(dst, currentPidProfile->dterm_filter_type);
         break;
 
+#ifdef USE_GYRO_FAST_KALMAN
+    case MSP_FAST_KALMAN:
+        sbufWriteU16(dst, gyroConfig()->gyro_filter_q);
+        sbufWriteU16(dst, gyroConfig()->gyro_filter_r);
+        break;
+#endif
+
+#ifdef USE_GYRO_IMUF9001
+    case MSP_IMUF_CONFIG:
+        sbufWriteU16(dst, gyroConfig()->imuf_mode);
+        sbufWriteU16(dst, gyroConfig()->imuf_pitch_q);
+        sbufWriteU16(dst, gyroConfig()->imuf_pitch_w);
+        sbufWriteU16(dst, gyroConfig()->imuf_roll_q);
+        sbufWriteU16(dst, gyroConfig()->imuf_roll_w);
+        sbufWriteU16(dst, gyroConfig()->imuf_yaw_q);
+        sbufWriteU16(dst, gyroConfig()->imuf_yaw_w);
+        sbufWriteU16(dst, gyroConfig()->imuf_pitch_lpf_cutoff_hz);
+        sbufWriteU16(dst, gyroConfig()->imuf_roll_lpf_cutoff_hz);
+        sbufWriteU16(dst, gyroConfig()->imuf_yaw_lpf_cutoff_hz);
+        break;
+#endif
+
     case MSP_PID_ADVANCED:
         sbufWriteU16(dst, 0);
         sbufWriteU16(dst, 0);
@@ -1672,6 +1694,28 @@ static mspResult_e mspProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
         // reinitialize the PID filters with the new values
         pidInitFilters(currentPidProfile);
         break;
+
+#ifdef USE_GYRO_FAST_KALMAN
+    case MSP_SET_FAST_KALMAN:
+        gyroConfigMutable()->gyro_filter_q = sbufReadU16(src);
+        gyroConfigMutable()->gyro_filter_r = sbufReadU16(src);
+        break;
+#endif
+
+#ifdef USE_GYRO_IMUF9001
+    case MSP_SET_IMUF_CONFIG :
+        gyroConfigMutable()->imuf_mode = sbufReadU16(src);
+        gyroConfigMutable()->imuf_pitch_q = sbufReadU16(src);
+        gyroConfigMutable()->imuf_pitch_w = sbufReadU16(src);
+        gyroConfigMutable()->imuf_roll_q = sbufReadU16(src);
+        gyroConfigMutable()->imuf_roll_w = sbufReadU16(src);
+        gyroConfigMutable()->imuf_yaw_q = sbufReadU16(src);
+        gyroConfigMutable()->imuf_yaw_w = sbufReadU16(src);
+        gyroConfigMutable()->imuf_pitch_lpf_cutoff_hz = sbufReadU16(src);
+        gyroConfigMutable()->imuf_roll_lpf_cutoff_hz = sbufReadU16(src);
+        gyroConfigMutable()->imuf_yaw_lpf_cutoff_hz = sbufReadU16(src);
+        break;
+#endif
 
     case MSP_SET_PID_ADVANCED:
         sbufReadU16(src);

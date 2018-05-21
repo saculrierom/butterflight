@@ -67,9 +67,6 @@
 
 static pidProfile_t *pidProfile;
 
-// true if arming is done via the sticks (as opposed to a switch)
-static bool isUsingSticksToArm = true;
-
 float rcCommand[4];           // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW
 
 PG_REGISTER_WITH_RESET_TEMPLATE(rcControlsConfig_t, rcControlsConfig, PG_RC_CONTROLS_CONFIG, 0);
@@ -79,14 +76,15 @@ PG_RESET_TEMPLATE(rcControlsConfig_t, rcControlsConfig,
     .yaw_deadband = 0,
     .alt_hold_deadband = 40,
     .alt_hold_fast_change = 1,
-    .yaw_control_reversed = false,
+    .yaw_control_reversed = false
 );
 
 PG_REGISTER_WITH_RESET_TEMPLATE(armingConfig_t, armingConfig, PG_ARMING_CONFIG, 1);
 
 PG_RESET_TEMPLATE(armingConfig_t, armingConfig,
     .gyro_cal_on_first_arm = 0,  // TODO - Cleanup retarded arm support
-    .auto_disarm_delay = 5
+    .auto_disarm_delay = 5,
+    .isUsingSticksForArming = false
 );
 
 PG_REGISTER_WITH_RESET_TEMPLATE(flight3DConfig_t, flight3DConfig, PG_MOTOR_3D_CONFIG, 0);
@@ -102,7 +100,7 @@ PG_RESET_TEMPLATE(flight3DConfig_t, flight3DConfig,
 
 bool isUsingSticksForArming(void)
 {
-    return isUsingSticksToArm;
+    return armingConfig()->isUsingSticksForArming;
 }
 
 bool areSticksInApModePosition(uint16_t ap_mode)
@@ -172,7 +170,7 @@ void processRcStickPositions()
     rcSticks = stTmp;
 
     // perform actions
-    if (!isUsingSticksToArm) {
+    if (!isUsingSticksForArming()) {
         if (IS_RC_MODE_ACTIVE(BOXARM)) {
             rcDisarmTicks = 0;
             // Arming via ARM BOX
@@ -386,6 +384,4 @@ int32_t getRcStickDeflection(int32_t axis, uint16_t midrc) {
 void useRcControlsConfig(pidProfile_t *pidProfileToUse)
 {
     pidProfile = pidProfileToUse;
-
-    isUsingSticksToArm = !isModeActivationConditionPresent(BOXARM);
 }
