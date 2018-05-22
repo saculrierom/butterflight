@@ -601,6 +601,9 @@ static OSD_Entry cmsx_menuImuEntries[] =
     {"RATE",      OME_Submenu, cmsMenuChange,                 &cmsx_menuRateProfile,                                         0},
 
     {"FILT GLB",  OME_Submenu, cmsMenuChange,                 &cmsx_menuFilterGlobal,                                        0},
+#if defined(USE_GYRO_IMUF9001)
+    {"IMU-F",     OME_Submenu,  cmsMenuChange,                &cmsx_menuImuf,                                                0},
+#endif //USE_GYRO_IMUF9001
 #ifdef USE_EXTENDED_CMS_MENUS
     {"COPY PROF", OME_Submenu, cmsMenuChange,                 &cmsx_menuCopyProfile,                                         0},
 #endif /* USE_EXTENDED_CMS_MENUS */

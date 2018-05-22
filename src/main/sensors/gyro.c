@@ -138,10 +138,6 @@ typedef struct gyroSensor_s {
     filterApplyFnPtr lowpass2FilterApplyFn;
     gyroLowpassFilter_t lowpass2Filter[XYZ_AXIS_COUNT];
 
-    // lagged moving average smoothing
-    filterApplyFnPtr lmaSmoothingApplyFn;
-    laggedMovingAverage_t lmaSmoothingFilter[XYZ_AXIS_COUNT];
-
     // notch filters
     filterApplyFnPtr notchFilter1ApplyFn;
     biquadFilter_t notchFilter1[XYZ_AXIS_COUNT];
@@ -252,8 +248,6 @@ PG_RESET_TEMPLATE(gyroConfig_t, gyroConfig,
     .gyro_filter_r = 88,
     .gyro_filter_p = 0,
     .gyro_offset_yaw = 0,
-    .gyro_lma_depth = 0,
-    .gyro_lma_weight = 100,
     .yaw_spin_recovery = true,
     .yaw_spin_threshold = 1950,
 );
@@ -762,20 +756,6 @@ void gyroInitLowpassFilterLpf(gyroSensor_t *gyroSensor, int slot, int type, uint
     }
 }
 
-static void gyroInitLmaSmoothing(gyroSensor_t *gyroSensor, uint8_t depth, uint8_t weight)
-{
-    gyroSensor->lmaSmoothingApplyFn = nullFilterApply;
-
-    if (depth && weight) {
-        const uint8_t windowSize = depth + 1;
-        const float lmaWeight = weight * 0.01f;
-        gyroSensor->lmaSmoothingApplyFn = (filterApplyFnPtr)lmaSmoothingUpdate;
-        for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-            lmaSmoothingInit(&gyroSensor->lmaSmoothingFilter[axis], windowSize, lmaWeight);
-        }
-    }
-}
-
 static uint16_t calculateNyquistAdjustedNotchHz(uint16_t notchHz, uint16_t notchCutoffHz)
 {
     const uint32_t gyroFrequencyNyquist = 1000000 / 2 / gyro.targetLooptime;
@@ -877,7 +857,6 @@ static void gyroInitSensorFilters(gyroSensor_t *gyroSensor)
       gyroConfig()->gyro_lowpass2_order
     );
 
-    gyroInitLmaSmoothing(gyroSensor, gyroConfig()->gyro_lma_depth, gyroConfig()->gyro_lma_weight);
     gyroInitFilterNotch1(gyroSensor, gyroConfig()->gyro_soft_notch_hz_1, gyroConfig()->gyro_soft_notch_cutoff_1);
     gyroInitFilterNotch2(gyroSensor, gyroConfig()->gyro_soft_notch_hz_2, gyroConfig()->gyro_soft_notch_cutoff_2);
 #endif //!USE_GYRO_IMUF9001
@@ -1256,7 +1235,6 @@ static FAST_CODE NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSensor, timeUs
 #ifndef USE_GYRO_IMUF9001
             gyroADCf = gyroSensor->lowpassFilterApplyFn((filter_t *)&gyroSensor->lowpassFilter[axis], gyroADCf);
             gyroADCf = gyroSensor->lowpass2FilterApplyFn((filter_t *)&gyroSensor->lowpass2Filter[axis], gyroADCf);
-            gyroADCf = gyroSensor->lmaSmoothingApplyFn((filter_t *)&gyroSensor->lmaSmoothingFilter[axis], gyroADCf);
 #ifdef USE_GYRO_DATA_ANALYSE
             gyroADCf = gyroSensor->notchFilterDynApplyFn((filter_t *)&gyroSensor->notchFilterDyn[axis], gyroADCf);
 #endif
@@ -1283,7 +1261,6 @@ static FAST_CODE NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSensor, timeUs
 #ifndef USE_GYRO_IMUF9001
             gyroADCf = gyroSensor->lowpassFilterApplyFn((filter_t *)&gyroSensor->lowpassFilter[axis], gyroADCf);
             gyroADCf = gyroSensor->lowpass2FilterApplyFn((filter_t *)&gyroSensor->lowpass2Filter[axis], gyroADCf);
-            gyroADCf = gyroSensor->lmaSmoothingApplyFn((filter_t *)&gyroSensor->lmaSmoothingFilter[axis], gyroADCf);
 #ifdef USE_GYRO_DATA_ANALYSE
             // apply dynamic notch filter
             if (isDynamicFilterActive()) {

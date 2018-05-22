@@ -28,8 +28,6 @@
 #define MAX_FIR_DENOISE_WINDOW_SIZE 120
 #endif
 
-#define MAX_LMA_WINDOW_SIZE 12
-
 struct filter_s;
 typedef struct filter_s filter_t;
 
@@ -73,14 +71,6 @@ typedef struct fastKalman_s {
     float x;       // state
     float lastX;   // previous state
 } fastKalman_t;
-
-typedef struct laggedMovingAverage_s {
-    uint16_t movingWindowIndex;
-    uint16_t windowSize;
-    float weight;
-    float movingSum;
-    float buf[MAX_LMA_WINDOW_SIZE];
-} laggedMovingAverage_t;
 
 typedef enum {
     FILTER_PT1 = 0,
@@ -131,13 +121,8 @@ float biquadFilterApply(biquadFilter_t *filter, float input);
 float biquadCascadeFilterApply(biquadFilterCascade_t *filter, float input);
 float filterGetNotchQ(float centerFreq, float cutoffFreq);
 
-void biquadRCFIR2FilterInit(biquadFilter_t *filter, float k);
-
 void fastKalmanInit(fastKalman_t *filter, float q, float r, float p);
 float fastKalmanUpdate(fastKalman_t *filter, float input);
-
-void lmaSmoothingInit(laggedMovingAverage_t *filter, uint8_t windowSize, float weight);
-float lmaSmoothingUpdate(laggedMovingAverage_t *filter, float input);
 
 // not exactly correct, but very very close and much much faster
 #define filterGetNotchQApprox(centerFreq, cutoff)   ((float)(cutoff * centerFreq) / ((float)(centerFreq - cutoff) * (float)(centerFreq + cutoff)))

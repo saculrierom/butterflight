@@ -451,9 +451,6 @@ const clivalue_t valueTable[] = {
     { "gyro_notch2_hz",             VAR_UINT16 | MASTER_VALUE, .config.minmax = { 0, 16000 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_soft_notch_hz_2) },
     { "gyro_notch2_cutoff",         VAR_UINT16 | MASTER_VALUE, .config.minmax = { 0, 16000 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_soft_notch_cutoff_2) },
 
-    { "gyro_lma_depth",             VAR_UINT8  | MASTER_VALUE, .config.minmax = {0, 11}, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lma_depth)},
-    { "gyro_lma_weight",            VAR_UINT8  | MASTER_VALUE, .config.minmax = {0, 100}, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lma_weight)},
-
 #if defined(USE_GYRO_IMUF9001)
     { "imuf_mode",                  VAR_UINT16 | MASTER_VALUE, .config.minmax = { 0, 255   }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, imuf_mode) },
     { "imuf_rate",                  VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_IMUF_RATE }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, imuf_rate) },

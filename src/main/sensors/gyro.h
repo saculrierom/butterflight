@@ -91,10 +91,6 @@ typedef struct gyroConfig_s {
     bool     gyro_use_32khz;
     uint8_t  gyro_to_use;
 
-    // Lagged Moving Average smoother
-    uint8_t gyro_lma_depth;
-    uint8_t gyro_lma_weight;
-
     // Lowpass primary/secondary
     uint8_t  gyro_lowpass_type;
     uint8_t  gyro_lowpass2_type;

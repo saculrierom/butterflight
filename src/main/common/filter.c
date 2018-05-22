@@ -380,37 +380,6 @@ float firFilterDenoiseUpdate(firFilterDenoise_t *filter, float input)
 }
 #endif
 
-// ledvinap's proposed RC+FIR2 Biquad-- 1st order IIR, RC filter k
-void biquadRCFIR2FilterInit(biquadFilter_t *filter, float k)
-{
-    filter->b0 = k / 2;
-    filter->b1 = k / 2;
-    filter->b2 = 0;
-    filter->a1 = -(1 - k);
-    filter->a2 = 0;
-}
-
-void lmaSmoothingInit(laggedMovingAverage_t *filter, uint8_t windowSize, float weight)
-{
-    filter->movingWindowIndex = 0;
-    filter->windowSize = windowSize;
-    filter->weight = weight;
-}
-
-FAST_CODE float lmaSmoothingUpdate(laggedMovingAverage_t *filter, float input)
-{
-
-    filter->movingSum -= filter->buf[filter->movingWindowIndex];
-    filter->buf[filter->movingWindowIndex] = input;
-    filter->movingSum += input;
-
-    if (++filter->movingWindowIndex == filter->windowSize) {
-        filter->movingWindowIndex = 0;
-    }
-
-    return input + (((filter->movingSum  / filter->windowSize) - input) * filter->weight);
-}
-
 // Fast two-state Kalman
 void fastKalmanInit(fastKalman_t *filter, float q, float r, float p)
 {
