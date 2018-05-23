@@ -760,7 +760,7 @@ NOINLINE void mixTable(timeUs_t currentTimeUs, uint8_t vbatPidCompensation)
     const float scaledAxisPidPitch =
         constrainf(pidData[FD_PITCH].Sum, -currentPidProfile->pidSumLimit, currentPidProfile->pidSumLimit) / PID_MIXER_SCALING;
 
-    uint16_t yawPidSumLimit = currentPidProfile->pidSumLimitYaw;
+    uint16_t yawPidSumLimit = currentPidProfile->pidSumLimit;
 
 #ifdef USE_YAW_SPIN_RECOVERY
     const bool yawSpinDetected = gyroYawSpinDetected();

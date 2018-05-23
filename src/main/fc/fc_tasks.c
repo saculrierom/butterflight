@@ -111,8 +111,6 @@
 void taskBstMasterProcess(timeUs_t currentTimeUs);
 #endif
 
-volatile bool isRXDataNew;
-
 bool taskSerialCheck(timeUs_t currentTimeUs, timeDelta_t currentDeltaTimeUs)
 {
     UNUSED(currentTimeUs);
@@ -160,11 +158,6 @@ static void taskUpdateRxMain(timeUs_t currentTimeUs)
     if (!processRx(currentTimeUs)) {
         return;
     }
-
-    static timeUs_t lastRxTimeUs;
-    currentRxRefreshRate = constrain(currentTimeUs - lastRxTimeUs, 1000, 20000);
-    lastRxTimeUs = currentTimeUs;
-    isRXDataNew = true;
 
 #ifdef USE_USB_CDC_HID
     if (!ARMING_FLAG(ARMED)) {
@@ -263,7 +256,7 @@ void fcTasksInit(void)
 
     if (sensors(SENSOR_ACC)) {
         setTaskEnabled(TASK_ACCEL, true);
-        rescheduleTask(TASK_ACCEL, acc.accSamplingInterval);
+        rescheduleTask(TASK_ACCEL, DEFAULT_ACC_SAMPLE_INTERVAL);
         setTaskEnabled(TASK_ATTITUDE, true);
     }
 
@@ -424,15 +417,15 @@ cfTask_t cfTasks[TASK_COUNT] = {
     [TASK_ACCEL] = {
         .taskName = "ACC",
         .taskFunc = taskUpdateAccelerometer,
-        .desiredPeriod = TASK_PERIOD_HZ(1000),      // 1000Hz, every 1ms
+        .desiredPeriod = TASK_PERIOD_HZ(DEFAULT_ACC_SAMPLE_INTERVAL),      // 1000Hz, every 1ms
         .staticPriority = TASK_PRIORITY_MEDIUM,
     },
 
     [TASK_ATTITUDE] = {
         .taskName = "ATTITUDE",
         .taskFunc = imuUpdateAttitude,
-        .desiredPeriod = TASK_PERIOD_HZ(100),
-        .staticPriority = TASK_PRIORITY_MEDIUM,
+        .desiredPeriod = TASK_PERIOD_HZ(DEFAULT_ATTITUDE_UPDATE_INTERVAL),
+        .staticPriority = TASK_PRIORITY_HIGH,
     },
 
     [TASK_RX] = {
