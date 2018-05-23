@@ -100,7 +100,7 @@ static FAST_RAM float accumulatedMeasurements[XYZ_AXIS_COUNT];
 static FAST_RAM float gyroPrevious[XYZ_AXIS_COUNT];
 static FAST_RAM timeUs_t accumulatedMeasurementTimeUs;
 static FAST_RAM timeUs_t accumulationLastTimeSampledUs;
-
+float vGyroStdDevModulus;
 static bool gyroHasOverflowProtection = true;
 
 typedef struct gyroCalibration_s {
@@ -1185,7 +1185,7 @@ static FAST_CODE NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSensor, timeUs
         // still calibrating, so no need to further process gyro data
     }
     #else
-    if (isGyroCalibrationComplete(gyroSensor)) {
+    if (isGyroCalibrationComplete()) {
         // move 16-bit gyro data into 32-bit variables to avoid overflows in calculations
         
         #if defined(USE_GYRO_SLEW_LIMITER)
@@ -1429,4 +1429,4 @@ uint8_t gyroReadRegister(uint8_t whichSensor, uint8_t reg)
 {
     return mpuGyroReadRegister(gyroSensorBusByDevice(whichSensor), reg);
 }
-#endif // USE_GYRO_REGISTER_DUMP
+#endif // USE_GYRO_REGISTER_DUMP`
