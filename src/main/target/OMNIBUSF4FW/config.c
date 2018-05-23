@@ -29,15 +29,23 @@
 #include "drivers/max7456.h"
 #include "io/serial.h"
 
-#include "config_helper.h"
+typedef struct targetSerialConfig_s {
+    serialPortIdentifier_e identifier;
+    serialPortFunction_e   function;    
+} targetSerialConfig_t;
 
-static targetSerialPortFunction_t targetSerialPortFunction[] = {
+targetSerialConfig_t targetSerialConfig[] = {
     { SERIAL_PORT_USART1, FUNCTION_RX_SERIAL },
     { SERIAL_PORT_UART4,  FUNCTION_ESC_SENSOR },    
 };
 
 void targetConfiguration(void)
 {
-    targetSerialPortFunctionConfig(targetSerialPortFunction, ARRAYLEN(targetSerialPortFunction));
+    for (unsigned i = 0 ; i < ARRAYLEN(targetSerialConfig) ; i++) {
+        int index = findSerialPortIndexByIdentifier(targetSerialConfig[i].identifier);
+        if (index >= 0) {
+            serialConfigMutable()->portConfigs[index].functionMask = targetSerialConfig[i].function;
+        }
+    }
 }
 #endif

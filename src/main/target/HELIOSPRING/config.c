@@ -30,7 +30,8 @@
 #include "fc/config.h"
 #include "fc/fc_rc.h"
 #include "fc/rc_controls.h"
-#include "rx/rx.h"
+#include "rx/rx.h"\
+
 
 
 
@@ -49,22 +50,26 @@ void targetConfiguration(void) {
     for (uint8_t pidProfileIndex = 0; pidProfileIndex < MAX_PROFILE_COUNT; pidProfileIndex++) {
         pidProfile_t *pidProfile = pidProfilesMutable(pidProfileIndex);
 
-        pidProfile->pid[PID_PITCH].P = 45;	
-        pidProfile->pid[PID_PITCH].I = 50;		
-        pidProfile->pid[PID_ROLL].P  = 45;	
-        pidProfile->pid[PID_ROLL].I  = 50;
-        pidProfile->pid[PID_YAW].P   = 45;	
-        pidProfile->pid[PID_YAW].I   = 50;
-        pidProfile->pid[PID_YAW].D   = 8;
-
+        pidProfile->buttered_pids = pidProfileIndex > 0;
+        if (pidProfile->buttered_pids) {
+            pidProfile->pid[PID_ROLL]  = BUTTERED_PIDS_ROLL;
+            pidProfile->pid[PID_PITCH] = BUTTERED_PIDS_PITCH;
+            pidProfile->pid[PID_YAW]   = BUTTERED_PIDS_YAW;
+        }
+       
         /* Setpoints */
         // should't need to set these since they don't get init in gyro.c with USE_GYRO_IMUF
         // pidProfile->yaw_lpf_hz = 0;
         // pidProfile->dterm_lpf_hz = 0;    
         // pidProfile->dterm_notch_hz = 0;
         // pidProfile->dterm_notch_cutoff = 0;
-        pidProfile->dterm_filter_type = FILTER_BIQUAD;
-        pidProfile->dterm_lowpass_hz = 65;
+        if (!pidProfileIndex) {
+            pidProfile->dtermSetpointWeight   = 100;	
+            pidProfile->setpointRelaxRatio    = 100;
+        }
+        pidProfile->dterm_filter_type     = FILTER_BIQUAD;
+        pidProfile->dterm_lowpass_hz      = 65;
+        pidProfile->dterm_notch_cutoff    = 0;
     }
 }
 

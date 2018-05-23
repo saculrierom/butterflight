@@ -99,7 +99,6 @@ typedef struct gyroConfig_s {
 
     // Order is used for the 'higher ordering' of cascaded butterworth/biquad sections
     uint8_t  gyro_lowpass_order;
-    uint8_t  gyro_lowpass2_order;
 
     uint16_t gyro_lowpass_hz;
     uint16_t  gyro_lowpass2_hz;
@@ -115,11 +114,9 @@ typedef struct gyroConfig_s {
     uint16_t imuf_mode;
     uint16_t imuf_rate;
     uint16_t imuf_pitch_q;
-    uint16_t imuf_pitch_w;
     uint16_t imuf_roll_q;
-    uint16_t imuf_roll_w;
     uint16_t imuf_yaw_q;
-    uint16_t imuf_yaw_w;
+    uint16_t imuf_w;
     uint16_t imuf_pitch_lpf_cutoff_hz;
     uint16_t imuf_roll_lpf_cutoff_hz;
     uint16_t imuf_yaw_lpf_cutoff_hz;

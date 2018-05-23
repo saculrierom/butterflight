@@ -35,17 +35,6 @@
 #include "drivers/accgyro/gyro_sync.h"
 
 
-bool gyroSyncCheckUpdate(gyroDev_t *gyro)
-{
-    bool ret;
-    if (gyro->dataReady) {
-        ret = true;
-        gyro->dataReady= false;
-    } else {
-        ret = false;
-    }
-    return ret;
-}
 
 uint32_t gyroSetSampleRate(gyroDev_t *gyro, uint8_t lpf, uint8_t gyroSyncDenominator, bool gyro_use_32khz)
 {

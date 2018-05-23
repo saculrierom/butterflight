@@ -50,11 +50,6 @@ typedef struct biquadFilter_s {
 
 #define BIQUAD_LPF_ORDER_MAX 6
 
-typedef struct biquadFilterCascade_s {
-    int sections;
-    biquadFilter_t biquad[(BIQUAD_LPF_ORDER_MAX + 1) / 2];   // each section is of second order
-} biquadFilterCascade_t;
-
 typedef struct firFilterDenoise_s {
     int filledCount;
     int targetCount;
@@ -73,12 +68,10 @@ typedef struct fastKalman_s {
 } fastKalman_t;
 
 typedef enum {
-    FILTER_PT1 = 0,
+    FILTER_FAST_KALMAN = 0,
+    FILTER_PT1,
     FILTER_BIQUAD,
-    FILTER_FIR,
-    FILTER_BUTTERWORTH,
-    FILTER_BIQUAD_RC_FIR2,
-    FILTER_FAST_KALMAN
+    FILTER_FIR
 } lowpassFilterType_e;
 
 typedef enum {
@@ -87,13 +80,6 @@ typedef enum {
     FILTER_BPF,
     FILTER_LPF1,   // 1st order Butterworth section
 } biquadFilterType_e;
-
-typedef enum {
-    STAGE2_FILTER_NONE = 0,
-    STAGE2_FILTER_BIQUAD_RC_FIR2,
-    STAGE2_FILTER_FAST_KALMAN,
-    STAGE2_FILTER_FIXED_K_KALMAN
-} stage2FilterType_e;
 
 typedef struct firFilter_s {
     float *buf;
@@ -114,11 +100,9 @@ float nullFilterApply(filter_t *filter, float input);
 void biquadFilterInitLPF(biquadFilter_t *filter, float filterFreq, uint32_t refreshRate);
 void biquadFilterInit(biquadFilter_t *filter, float filterFreq, uint32_t refreshRate, float Q, biquadFilterType_e filterType);
 void biquadFilterUpdate(biquadFilter_t *filter, float filterFreq, uint32_t refreshRate, float Q, biquadFilterType_e filterType);
-int biquadFilterLpfCascadeInit(biquadFilter_t *sections, int order, float filterFreq, uint32_t refreshRate);
 
 float biquadFilterApplyDF1(biquadFilter_t *filter, float input);
 float biquadFilterApply(biquadFilter_t *filter, float input);
-float biquadCascadeFilterApply(biquadFilterCascade_t *filter, float input);
 float filterGetNotchQ(float centerFreq, float cutoffFreq);
 
 void fastKalmanInit(fastKalman_t *filter, float q, float r, float p);

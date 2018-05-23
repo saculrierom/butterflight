@@ -30,7 +30,7 @@
 #define USE_GYRO
 #define USE_ACC
 
-#define DEFAULT_ATTITUDE_UPDATE_INTERVAL 1000 
+#define DEFAULT_ATTITUDE_UPDATE_INTERVAL 200 
 #define DEFAULT_ACC_SAMPLE_INTERVAL      1000
 
 #define USE_FAST_SPI_DRIVER
@@ -190,14 +190,23 @@
 #define DEFAULT_CURRENT_METER_SOURCE   CURRENT_METER_ADC
 #define CURRENT_METER_ADC_PIN          PA1
 #define VBAT_ADC_PIN                   PA0
-#define CURRENT_METER_SCALE_DEFAULT    400
-#define VBAT_SCALE                     109
+#define CURRENT_METER_SCALE_DEFAULT    250
+#define VBAT_SCALE                     110
 
 #define CAMERA_CONTROL_PIN             PB6    // define dedicated camera_osd_control pin
 
-#define IMUF_DEFAULT_PITCH_Q 3500
-#define IMUF_DEFAULT_PITCH_W 6
-#define IMUF_DEFAULT_ROLL_Q 3500
-#define IMUF_DEFAULT_ROLL_W 6
-#define IMUF_DEFAULT_YAW_Q 2500
-#define IMUF_DEFAULT_YAW_W 6
+#define IMUF_DEFAULT_PITCH_Q  2500
+#define IMUF_DEFAULT_ROLL_Q   2500
+#define IMUF_DEFAULT_YAW_Q    2500
+#define IMUF_DEFAULT_W        32
+#define IMUF_DEFAULT_LPF_HZ   120.0f
+
+#define USE_BUTTERED_PIDS true
+
+#define DEFAULT_PIDS_ROLL   {45, 50, 20}
+#define DEFAULT_PIDS_PITCH  {45, 50, 22}
+#define DEFAULT_PIDS_YAW    {45, 50, 8}
+
+#define BUTTERED_PIDS_ROLL  (pid8_t){50, 50, 12}
+#define BUTTERED_PIDS_PITCH (pid8_t){54, 50, 14}
+#define BUTTERED_PIDS_YAW   (pid8_t){50, 50, 5}

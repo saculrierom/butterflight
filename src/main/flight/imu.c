@@ -108,18 +108,6 @@ PG_RESET_TEMPLATE(imuConfig_t, imuConfig,
     .acc_unarmedcal = 1
 );
 
-
-// calculate RC time constant used in the accZ lpf.
-static float calculateAccZLowPassFilterRCTimeConstant(float accz_lpf_cutoff)
-{
-    return 0.5f / (M_PIf * accz_lpf_cutoff);
-}
-
-static float calculateThrottleAngleScale(uint16_t throttle_correction_angle)
-{
-    return (1800.0f / M_PIf) * (900.0f / throttle_correction_angle);
-}
-
 void imuConfigure(uint16_t throttle_correction_angle)
 {
     imuRuntimeConfig.dcm_kp = imuConfig()->dcm_kp / 10000.0f;
@@ -127,8 +115,8 @@ void imuConfigure(uint16_t throttle_correction_angle)
     imuRuntimeConfig.acc_unarmedcal = imuConfig()->acc_unarmedcal;
     imuRuntimeConfig.small_angle = imuConfig()->small_angle;
 
-    fc_acc = calculateAccZLowPassFilterRCTimeConstant(5.0f); // Set to fix value
-    throttleAngleScale = calculateThrottleAngleScale(throttle_correction_angle);
+    fc_acc = (0.5f / (M_PIf * 5.0f)); // Set to fix value
+    throttleAngleScale = (1800.0f / M_PIf) * (900.0f / throttle_correction_angle);
 }
 
 void imuInit(void)
@@ -142,15 +130,6 @@ void imuInit(void)
         printf("Create imuUpdateLock error!\n");
     }
 #endif
-}
-
-void imuResetAccelerationSum(void)
-{
-    accSum[0] = 0;
-    accSum[1] = 0;
-    accSum[2] = 0;
-    accSumCount = 0;
-    accTimeSum = 0;
 }
 
 #if defined(USE_ALT_HOLD)
@@ -391,15 +370,15 @@ static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
     applySensorCorrection(&vError);
     imuMahonyAHRSupdate(deltaT * 1e-6f, &vGyroAverage, &vError);
 #else
-    UNUSED(deltaT);
-    UNUSED(applyAccError);
-    UNUSED(imuMahonyAHRSupdate);
-    qAttitude.w = imufQuat.w;
-    qAttitude.x = imufQuat.x;
-    qAttitude.y = imufQuat.y;
-    qAttitude.z = imufQuat.z;
-    applySensorCorrection(&qAttitude);
-    quaternionComputeProducts(&qAttitude, &qpAttitude);
+        UNUSED(deltaT);
+        UNUSED(applyAccError);
+        UNUSED(imuMahonyAHRSupdate);
+        qAttitude.w = imufQuat.w;
+        qAttitude.x = imufQuat.x;
+        qAttitude.y = imufQuat.y;
+        qAttitude.z = imufQuat.z;
+        applySensorCorrection(&qAttitude);
+        quaternionComputeProducts(&qAttitude, &qpAttitude);
 #endif
     imuUpdateEulerAngles();
 #endif

@@ -115,8 +115,6 @@ void setDefaultTestSettings(void) {
     pidProfile->horizon_tilt_expert_mode = false;
     pidProfile->crash_limit_yaw = 200;
     pidProfile->itermLimit = 150;
-    pidProfile->throttle_boost = 0;
-    pidProfile->throttle_boost_cutoff = 15;
     pidProfile->iterm_rotation = false;
 
     gyro.targetLooptime = 4000;

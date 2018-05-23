@@ -52,7 +52,9 @@
 
 typedef float (applyRatesFn)(const int axis, float rcCommandf, const float rcCommandfAbs);
 
-static float setpointRate[3], rcDeflection[3], rcDeflectionAbs[3];
+static float rcDeflection[3], rcDeflectionAbs[3];
+static volatile float setpointRate[3];
+static volatile uint32_t setpointRateInt[3];
 static float throttlePIDAttenuation;
 static bool reverseMotors = false;
 static applyRatesFn *applyRates;
@@ -61,7 +63,7 @@ static float rcStepSize[4] = { 0, 0, 0, 0 };
 static float inverseRcInt;
 static uint8_t interpolationChannels;
 volatile bool isRXDataNew;
-volatile bool skipNextInterpolate;
+volatile uint8_t skipInterpolate;
 volatile int16_t rcInterpolationStepCount;
 volatile uint16_t rxRefreshRate;
 volatile uint16_t currentRxRefreshRate;
@@ -69,6 +71,11 @@ volatile uint16_t currentRxRefreshRate;
 float getSetpointRate(int axis)
 {
     return setpointRate[axis];
+}
+
+uint32_t getSetpointRateInt(int axis) 
+{
+    return setpointRateInt[axis];
 }
 
 float getRcDeflection(int axis)
@@ -140,6 +147,7 @@ static void calculateSetpointRate(int axis)
 
     float angleRate = applyRates(axis, rcCommandf, rcCommandfAbs);
     setpointRate[axis] = constrainf(angleRate, -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT); // Rate limit protection (deg/sec)
+    setpointRateInt[axis] = (uint32_t)setpointRate[axis];
 }
 
 static void scaleRcCommandToFpvCamAngle(void)
@@ -189,13 +197,13 @@ static void checkForThrottleErrorResetState(void)
     }
 }
 
-FAST_CODE FAST_CODE_NOINLINE void processRcCommand(void)
+FAST_CODE void processRcCommand(void)
 {
-    if (skipNextInterpolate && !isRXDataNew) {
-        skipNextInterpolate = false;
+    if (skipInterpolate && !isRXDataNew) {
+        skipInterpolate--;
         return;
     }
-    skipNextInterpolate = targetPidLooptime < 62;
+    skipInterpolate = targetPidLooptime < 120 ? 3: 0;
 
     int updatedChannel = 0;
     if (isRXDataNew && isAntiGravityModeActive()) {
@@ -225,7 +233,7 @@ FAST_CODE FAST_CODE_NOINLINE void processRcCommand(void)
                     rxRefreshRate = rxGetRefreshRate();
             }
 
-            rcInterpolationStepCount = rxRefreshRate / targetPidLooptime;
+            rcInterpolationStepCount = rxRefreshRate / MAX(targetPidLooptime, 125u);
             inverseRcInt = 1.0f / (float)rcInterpolationStepCount;
 
             for (int channel = ROLL; channel < interpolationChannels; channel++) {
@@ -293,7 +301,7 @@ FAST_CODE FAST_CODE_NOINLINE void processRcCommand(void)
     }
 }
 
-FAST_CODE FAST_CODE_NOINLINE void updateRcCommands(void)
+FAST_CODE void updateRcCommands(void)
 {
     isRXDataNew = true;
     // PITCH & ROLL only dynamic PID adjustment,  depending on throttle value

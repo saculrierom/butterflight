@@ -95,7 +95,7 @@ void pgResetFn_motorConfig(motorConfig_t *motorConfig)
     {
         motorConfig->minthrottle = 1070;
         motorConfig->dev.motorPwmRate = BRUSHLESS_MOTORS_PWM_RATE;
-        motorConfig->dev.motorPwmProtocol = PWM_TYPE_ONESHOT125;
+        motorConfig->dev.motorPwmProtocol = PWM_TYPE_MULTISHOT;
     }
 #endif
     motorConfig->maxthrottle = 2000;
@@ -105,7 +105,7 @@ void pgResetFn_motorConfig(motorConfig_t *motorConfig)
     motorConfig->dev.useBurstDshot = ENABLE_DSHOT_DMAR;
 #endif
 
-    for (int motorIndex = 0; motorIndex < MAX_SUPPORTED_MOTORS; motorIndex++) {
+ for (int motorIndex = 0; motorIndex < MAX_SUPPORTED_MOTORS; motorIndex++) {
         motorConfig->dev.ioTags[motorIndex] = timerioTagGetByUsage(TIM_USE_MOTOR, motorIndex);
     }
 
@@ -365,8 +365,8 @@ bool mixerIsOutputSaturated(int axis, float errorRate)
         return mixerTricopterIsServoSaturated(errorRate);
     }
     #else
-        (void)axis;
-        (void)errorRate;
+    (void)axis;
+    (void)errorRate;
         return motorMixRange >= 1.0f;
     #endif
     return false;
@@ -745,7 +745,7 @@ float applyThrottleLimit(float throttle)
     return throttle;
 }
 
-FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs, uint8_t vbatPidCompensation)
+FAST_CODE void mixTable(timeUs_t currentTimeUs, uint8_t vbatPidCompensation)
 {
     if (isFlipOverAfterCrashMode()) {
         applyFlipOverAfterCrashModeToMotors();
@@ -761,12 +761,12 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs, uint8_t vbatPidCompensa
     const float scaledAxisPidPitch =
         constrainf(pidData[FD_PITCH].Sum, -currentPidProfile->pidSumLimit, currentPidProfile->pidSumLimit) / PID_MIXER_SCALING;
 
-    uint16_t yawPidSumLimit = currentPidProfile->pidSumLimit;
+        uint16_t yawPidSumLimit = currentPidProfile->pidSumLimit;
 
 #ifdef USE_YAW_SPIN_RECOVERY
     const bool yawSpinDetected = gyroYawSpinDetected();
     if (yawSpinDetected) {
-        yawPidSumLimit = PIDSUM_LIMIT_MAX;   // Set to the maximum limit during yaw spin recovery to prevent limiting motor authority
+        yawPidSumLimit = PIDSUM_LIMIT;   // Set to the maximum limit during yaw spin recovery to prevent limiting motor authority
     }
 #endif // USE_YAW_SPIN_RECOVERY
 
@@ -813,10 +813,6 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs, uint8_t vbatPidCompensa
     }
 
     motorMixRange = motorMixMax - motorMixMin;
-    if (throttleBoost > 0.0f) {
-        float throttlehpf = throttle - pt1FilterApply(&throttleLpf, throttle);
-        throttle = constrainf(throttle + throttleBoost * throttlehpf, 0.0f, 1.0f);
-    }
 
     if (motorMixRange > 1.0f) {
         for (int i = 0; i < motorCount; i++) {

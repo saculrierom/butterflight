@@ -22,9 +22,8 @@
 
 #define USE_TARGET_CONFIG
 
+// OMNIBUSF4FW1/OFW1 for Public Test Version (not a valid target)
 // OMNIBUSF4FW for Version 2
-// OMNIBUSF4FW1/OFW1 for Public Test Version
-// (Not a valid target, .mk file must be supplied by a user)
 
 #if defined(OMNIBUSF4FW)
 #define TARGET_BOARD_IDENTIFIER "OBFW"
@@ -40,8 +39,7 @@
 #define LED0_PIN                PB5
 #endif
 
-#define USE_BEEPER
-#define BEEPER_PIN              PB4
+#define BEEPER              PB4
 #define BEEPER_INVERTED
 
 #define USE_ACC
@@ -54,17 +52,17 @@
 
 #define USE_DUAL_GYRO
 
-#define GYRO_1_CS_PIN           PD2
-#define GYRO_1_SPI_INSTANCE     SPI3
-#define GYRO_2_CS_PIN           PA4
-#define GYRO_2_SPI_INSTANCE     SPI1
+#define MPU6500_CS_PIN          PD2
+#define GYRO_0_CS_PIN           MPU6500_CS_PIN
+#define MPU6500_SPI_INSTANCE    SPI3
+#define MPU6000_CS_PIN          PA4
+#define GYRO_1_CS_PIN           MPU6000_CS_PIN
+#define MPU6000_SPI_INSTANCE    SPI1
 
-#define GYRO_1_ALIGN            CW180_DEG
-#define ACC_1_ALIGN             CW180_DEG
-#define GYRO_2_ALIGN            CW0_DEG_FLIP
-#define ACC_2_ALIGN             CW0_DEG_FLIP
-
-#define GYRO_CONFIG_USE_GYRO_DEFAULT GYRO_CONFIG_USE_GYRO_1
+#define GYRO_MPU6500_ALIGN      CW180_DEG
+#define ACC_MPU6500_ALIGN       CW180_DEG
+#define GYRO_MPU6000_ALIGN      CW0_DEG_FLIP
+#define ACC_MPU6000_ALIGN       CW0_DEG_FLIP
 
 // MPU6000 interrupts
 #define USE_EXTI
@@ -91,8 +89,8 @@
 #define USE_FLASHFS
 #define USE_FLASH_M25P16
 #define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
-#define FLASH_SPI_INSTANCE      SPI2
-#define FLASH_CS_PIN            PB12
+#define M25P16_SPI_INSTANCE     SPI2
+#define M25P16_CS_PIN           PB12
 
 #define USE_VCP
 #define VBUS_SENSING_PIN        PC5
@@ -129,6 +127,7 @@
 
 #define USE_SPI
 #define USE_SPI_DEVICE_1
+//#define SPI1_NSS_PIN            PA4
 #define SPI1_SCK_PIN            PA5
 #define SPI1_MISO_PIN           PA6
 #define SPI1_MOSI_PIN           PA7
@@ -160,8 +159,8 @@
 #define RSSI_ADC_PIN            PA0  // Direct from RSSI pad
 
 // Allegro Systems ACS781KLRTR-150U-T
-#define CURRENT_METER_SCALE_DEFAULT  176
-#define CURRENT_METER_OFFSET_DEFAULT -18500
+#define CURRENT_METER_SCALE_DEFAULT  167
+#define CURRENT_METER_OFFSET_DEFAULT -19600 // Datasheet suggests -18500
 
 #define DEFAULT_VOLTAGE_METER_SOURCE VOLTAGE_METER_ADC
 #define DEFAULT_CURRENT_METER_SOURCE CURRENT_METER_ADC
@@ -182,4 +181,4 @@
 #define TARGET_IO_PORTD BIT(2)
 
 #define USABLE_TIMER_CHANNEL_COUNT 15
-#define USED_TIMERS ( TIM_N(1) | TIM_N(2) | TIM_N(3) | TIM_N(4) | TIM_N(5) | TIM_N(8) | TIM_N(9) | TIM_N(10) | TIM_N(11))
+#define USED_TIMERS ( TIM_N(1) | TIM_N(2) | TIM_N(3) | TIM_N(4) | TIM_N(5) | TIM_N(10) | TIM_N(12) | TIM_N(8) | TIM_N(9))

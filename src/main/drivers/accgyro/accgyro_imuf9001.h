@@ -50,7 +50,7 @@ void imufEndCalibration(void);
 #endif
 
 
-#define IMUF_FIRMWARE_VERSION  106
+#define IMUF_FIRMWARE_VERSION  107
 extern volatile uint16_t imufCurrentVersion;
 typedef struct imufVersion
 {   
@@ -85,6 +85,7 @@ typedef enum gyroCommands
     IMUF_COMMAND_LISTENING       = 108,
     IMUF_COMMAND_REPORT_INFO     = 121,
     IMUF_COMMAND_SETUP           = 122,
+    IMUF_COMMAND_SETPOINT        = 126,
     IMUF_COMMAND_RESTART         = 127,
 } gyroCommands_t;
 
