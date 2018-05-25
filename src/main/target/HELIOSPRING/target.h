@@ -24,7 +24,8 @@
 
 #define LED0_PIN                PB7
 
-#define BEEPER                  PC15
+#define USE_BEEPER
+#define BEEPER_PIN                  PC15
 #define BEEPER_INVERTED
 
 #define USE_GYRO
@@ -48,15 +49,17 @@
 #define USE_DSHOT_DMAR
 #define ENABLE_DSHOT_DMAR       true
 
-#define M25P16_CS_PIN           PC14
-#define M25P16_SPI_INSTANCE     SPI3
 #define FLASH_SPI_INSTANCE      SPI3
+#define FLASH_CS_PIN            PC14
+#define USE_FLASH
 #define USE_FLASHFS
 #define USE_FLASH_M25P16
+#define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
 
 #define USE_VCP
 
-#define VBUS_SENSING_PIN        PC5
+#define USE_USB_DETECT
+#define USB_DETECT_PIN          PC5
 
 #define USE_OSD
 #define USE_MAX7456

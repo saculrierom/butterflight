@@ -905,8 +905,9 @@ uint16_t returnGyroAlignmentForImuf9001(void)
 
 #endif
 
-static uint16_t gyroCalculateCalibratingCycles(void) {
-    return (CALIBRATING_GYRO_TIME_US / gyro.targetLooptime);
+static uint16_t gyroCalculateCalibratingCycles(void) 
+{
+    return (gyroConfig()->gyroCalibrationDuration * 10000) / gyro.targetLooptime;
 }
 
 static bool isOnFirstGyroCalibrationCycle(const gyroCalibration_t *gyroCalibration)

@@ -30,7 +30,7 @@
 #include "fc/config.h"
 #include "fc/fc_rc.h"
 #include "fc/rc_controls.h"
-#include "rx/rx.h"\
+#include "pg/rx.h"
 
 
 

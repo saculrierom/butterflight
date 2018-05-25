@@ -71,7 +71,8 @@
 #define USB_DETECT_PIN          PA9
 #define USE_USB_DETECT
 #define USB_CDC_HID
-#define VBUS_SENSING_PIN        PA9
+#define USE_USB_DETECT
+#define USB_DETECT_PIN          PA9
 #define VBUS_SENSING_ENABLED
 
 #define USE_UART1

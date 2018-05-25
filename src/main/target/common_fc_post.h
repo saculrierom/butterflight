@@ -110,7 +110,7 @@
 #endif
 
 // Determine if the target could have a 32KHz capable gyro
-#if defined(USE_GYRO_SPI_MPU6500) || defined(USE_GYRO_SPI_MPU9250) || defined(USE_GYRO_SPI_ICM20689)
+#if defined(USE_GYRO_SPI_MPU6500) || defined(USE_GYRO_SPI_MPU9250) || defined(USE_GYRO_SPI_ICM20689) || defined(USE_GYRO_IMUF9001)
 #define USE_32K_CAPABLE_GYRO
 #endif
 
