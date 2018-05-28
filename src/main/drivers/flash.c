@@ -42,9 +42,96 @@ static flashDevice_t flashDevice;
 
 // Read chip identification and send it to device detect
 
+
+#ifdef USE_GYRO_IMUF9001
+static inline void gpio_write_pin(GPIO_TypeDef * GPIOx, uint16_t GPIO_Pin, uint32_t pinState)
+{
+
+    if (pinState != 0)
+    {
+        GPIOx->BSRRL = (uint32_t)GPIO_Pin;
+    }
+    else
+    {
+        GPIOx->BSRRH = (uint32_t)GPIO_Pin;
+    }
+}
+
+static inline void flashSpiCsLo(void)
+{
+    gpio_write_pin(FLASH_SPI_SCK_PORT, FLASH_SPI_SCK_PIN, 0);
+}
+
+static inline void flashSpiCsHi(void)
+{
+    gpio_write_pin(FLASH_SPI_SCK_PORT, FLASH_SPI_SCK_PIN, 1);
+}
+#endif
+
+#define FLASH_SPI_SCK_PIN_SRC GPIO_PinSource14
+#define FLASH_SPI_SCK_PIN     GPIO_Pin_14
+#define FLASH_SPI_SCK_PORT    GPIOC
+
 bool flashInit(const flashConfig_t *flashConfig)
 {
     busdev = &busInstance;
+    const uint8_t out[] = { SPIFLASH_INSTRUCTION_RDID, 0, 0, 0 };
+    uint8_t in[4];
+    uint32_t chipID;;
+
+    #ifdef USE_GYRO_IMUF9001
+    GPIO_InitTypeDef gpioInitStruct;
+
+    //config pins
+    gpioInitStruct.GPIO_Pin = FLASH_SPI_SCK_PIN;
+    gpioInitStruct.GPIO_Mode = GPIO_Mode_OUT;
+    gpioInitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    gpioInitStruct.GPIO_OType = GPIO_OType_PP;
+    gpioInitStruct.GPIO_PuPd  = GPIO_PuPd_DOWN;
+    GPIO_Init(FLASH_SPI_SCK_PORT, &gpioInitStruct);
+    flashSpiCsHi();
+    busdev->busdev_u.spi.csnPin = NULL;
+
+    spiSetDivisor(busdev->busdev_u.spi.instance, SPI_CLOCK_STANDARD*2);
+
+    flashDevice.busdev = busdev;
+
+
+    delay(50); // short delay required after initialisation of SPI device instance.
+
+    /* Just in case transfer fails and writes nothing, so we don't try to verify the ID against random garbage
+     * from the stack:
+     */
+    in[1] = 0;
+
+    // Clearing the CS bit terminates the command early so we don't have to read the chip UID:
+    flashSpiCsLo();
+    spiTransfer(busdev->busdev_u.spi.instance, out, in, sizeof(out));
+    flashSpiCsHi();
+
+    // Manufacturer, memory type, and capacity
+    chipID = (in[1] << 16) | (in[2] << 8) | (in[3]);
+
+    // Manufacturer, memory type, and capacity
+
+#ifdef USE_FLASH_M25P16
+    if (m25p16_detect(&flashDevice, chipID)) {
+        return true;
+    }
+#endif
+
+#ifdef USE_FLASH_W25M
+    if (w25m_detect(&flashDevice, chipID)) {
+        return true;
+    }
+#endif
+
+    spiPreinitCsByTag(flashConfig->csTag);
+    return false;
+    #else
+
+    //set default CS state (high)
+    GPIO_SetBits(FLASH_SPI_SCK_PORT, FLASH_SPI_SCK_PIN);
 
     if (flashConfig->csTag) {
         busdev->busdev_u.spi.csnPin = IOGetByTag(flashConfig->csTag);
@@ -62,6 +149,8 @@ bool flashInit(const flashConfig_t *flashConfig)
     IOInit(busdev->busdev_u.spi.csnPin, OWNER_FLASH_CS, 0);
     IOConfigGPIO(busdev->busdev_u.spi.csnPin, SPI_IO_CS_CFG);
     IOHi(busdev->busdev_u.spi.csnPin);
+    #endif
+
 
 #ifndef FLASH_SPI_SHARED
     //Maximum speed for standard READ command is 20mHz, other commands tolerate 25mHz
@@ -71,21 +160,18 @@ bool flashInit(const flashConfig_t *flashConfig)
 
     flashDevice.busdev = busdev;
 
-    const uint8_t out[] = { SPIFLASH_INSTRUCTION_RDID, 0, 0, 0 };
-
     delay(50); // short delay required after initialisation of SPI device instance.
 
     /* Just in case transfer fails and writes nothing, so we don't try to verify the ID against random garbage
      * from the stack:
      */
-    uint8_t in[4];
     in[1] = 0;
 
     // Clearing the CS bit terminates the command early so we don't have to read the chip UID:
     spiBusTransfer(busdev, out, in, sizeof(out));
 
     // Manufacturer, memory type, and capacity
-    uint32_t chipID = (in[1] << 16) | (in[2] << 8) | (in[3]);
+    chipID = (in[1] << 16) | (in[2] << 8) | (in[3]);
 
 #ifdef USE_FLASH_M25P16
     if (m25p16_detect(&flashDevice, chipID)) {

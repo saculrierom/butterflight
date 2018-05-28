@@ -79,6 +79,34 @@ STATIC_ASSERT(M25P16_PAGESIZE < FLASH_MAX_PAGE_SIZE, M25P16_PAGESIZE_too_small);
 
 const flashVTable_t m25p16_vTable;
 
+#ifdef USE_GYRO_IMUF9001
+static inline void gpio_write_pin(GPIO_TypeDef * GPIOx, uint16_t GPIO_Pin, uint32_t pinState)
+{
+
+    if (pinState != 0)
+    {
+        GPIOx->BSRRL = (uint32_t)GPIO_Pin;
+    }
+    else
+    {
+        GPIOx->BSRRH = (uint32_t)GPIO_Pin;
+    }
+}
+
+static void m25p16_disable(busDevice_t *bus)
+{
+    (void)(bus); //BEEP BEEP! IMA SUPER SLOW BUS THAT IMUF DOESN'T WANT!
+    gpio_write_pin(FLASH_SPI_SCK_PORT, FLASH_SPI_SCK_PIN, 1);
+    __NOP();
+}
+
+static void m25p16_enable(busDevice_t *bus)
+{
+    (void)(bus); //BEEP BEEP! IMA SUPER SLOW BUS THAT IMUF DOESN'T WANT!
+    __NOP();
+    gpio_write_pin(FLASH_SPI_SCK_PORT, FLASH_SPI_SCK_PIN, 0);
+}
+#else
 static void m25p16_disable(busDevice_t *bus)
 {
     IOHi(bus->busdev_u.spi.csnPin);
@@ -90,6 +118,9 @@ static void m25p16_enable(busDevice_t *bus)
     __NOP();
     IOLo(bus->busdev_u.spi.csnPin);
 }
+#endif
+
+
 
 static void m25p16_transfer(busDevice_t *bus, const uint8_t *txData, uint8_t *rxData, int len)
 {
