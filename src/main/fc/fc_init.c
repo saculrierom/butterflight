@@ -81,6 +81,10 @@
 #include "drivers/dma_spi.h"
 #endif //USE_DMA_SPI_DEVICE
 
+#ifdef USE_GYRO_IMUF9001
+#include "drivers/accgyro/accgyro_imuf9001.h"
+#endif //USE_GYRO_IMUF9001
+
 #include "fc/config.h"
 #include "fc/fc_init.h"
 #include "fc/fc_tasks.h"
@@ -261,6 +265,13 @@ void init(void)
     printfSupportInit();
 
     systemInit();
+
+#ifdef USE_GYRO_IMUF9001
+    if (isMPUSoftReset()) {
+        // reset imuf before befhal mucks with the pins
+        resetImuf9001();
+    }
+#endif
 
     // initialize IO (needed for all IO operations)
     IOInitGlobal();
